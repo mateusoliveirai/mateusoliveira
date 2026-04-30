@@ -305,14 +305,10 @@
   const LOOP=4.8;
   let soundActive=false;
 
-  // autoplay COM SOM em loop
-  video.muted=false;
+  // loop MUDO — browser permite autoplay mudo
+  video.muted=true;
   video.loop=true;
-  video.play().catch(()=>{
-    // browser bloqueou autoplay com som — tenta mudo
-    video.muted=true;
-    video.play();
-  });
+  video.play().catch(()=>{});
 
   // manter loop nos primeiros 4.8s
   video.addEventListener('timeupdate',()=>{
@@ -323,15 +319,15 @@
     if(soundActive) doTvOff();
   });
 
-  // clique no play — libera intro com som
+  // clique no play — reinicia do zero com som
   btn.addEventListener('click',()=>{
     if(soundActive) return;
     soundActive=true;
     btn.style.display='none';
-    video.muted=false;
     video.loop=false;
     video.currentTime=0;
-    video.play().catch(()=>{video.muted=true;video.loop=false;video.play()});
+    video.muted=false;
+    video.play().catch(()=>{video.muted=true;video.play()});
   });
 
   function doTvOff(){
