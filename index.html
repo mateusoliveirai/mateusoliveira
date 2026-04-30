@@ -305,10 +305,14 @@
   const LOOP=4.8;
   let soundActive=false;
 
-  // autoplay mudo em loop
-  video.muted=true;
+  // autoplay COM SOM em loop
+  video.muted=false;
   video.loop=true;
-  video.play().catch(()=>{});
+  video.play().catch(()=>{
+    // browser bloqueou autoplay com som — tenta mudo
+    video.muted=true;
+    video.play();
+  });
 
   // manter loop nos primeiros 4.8s
   video.addEventListener('timeupdate',()=>{
@@ -319,6 +323,7 @@
     if(soundActive) doTvOff();
   });
 
+  // clique no play — libera intro com som
   btn.addEventListener('click',()=>{
     if(soundActive) return;
     soundActive=true;
