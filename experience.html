@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mateus Oliveira — AI Cinema Director</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --blue:#1E64DC;
+      --bg:#070A0F;
+      --white:#F0F0F0;
+      --grey:rgba(240,240,240,.45);
+    }
+    html{font-size:16px}
+    body{
+      background:var(--bg);
+      color:var(--white);
+      font-family:'DM Sans',sans-serif;
+      cursor:none;
+      overflow-x:hidden;
+    }
+
+    /* ── CURSOR ──────────────────────────────────────── */
+    .cursor{
+      position:fixed;width:8px;height:8px;
+      background:var(--white);border-radius:50%;
+      pointer-events:none;z-index:9999;
+      transform:translate(-50%,-50%);
+      mix-blend-mode:difference;
+      transition:width .2s,height .2s;
+    }
+    .cursor.big{width:40px;height:40px}
+    .cursor-ring{
+      position:fixed;width:36px;height:36px;
+      border:1px solid rgba(30,100,220,.5);
+      border-radius:50%;pointer-events:none;z-index:9998;
+      transform:translate(-50%,-50%);
+    }
+
+    /* ── NAV ─────────────────────────────────────────── */
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:1000;
+      padding:1.4rem 4rem;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .nav-logo{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:1.1rem;letter-spacing:.18em;
+      color:var(--white);text-decoration:none;
+    }
+    .nav-links{display:flex;gap:2.5rem;list-style:none}
+    .nav-links a{
+      font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;
+      color:rgba(255,255,255,.65);text-decoration:none;transition:color .2s;
+    }
+    .nav-links a:hover{color:var(--blue)}
+    .nav-cta{
+      background:var(--blue);color:#fff;
+      font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;
+      padding:.5rem 1.3rem;text-decoration:none;transition:opacity .2s;
+    }
+    .nav-cta:hover{opacity:.85}
+
+    /* ── CANVAS FULLSCREEN FIXED ─────────────────────── */
+    #scene-canvas{
+      position:fixed;
+      top:0;left:0;
+      width:100%;height:100%;
+      z-index:0;
+    }
+
+    /* ── SCROLL CONTAINER ────────────────────────────── */
+    #scroll-container{
+      position:relative;
+      z-index:10;
+      pointer-events:none;
+    }
+
+    /* ── SECTIONS ────────────────────────────────────── */
+    .scene-section{
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      pointer-events:none;
+    }
+
+    /* S1 — Intro */
+    .s1-content{
+      text-align:left;
+      padding:0 4rem;
+      width:100%;
+      padding-top:8rem;
+      align-self:flex-end;
+      padding-bottom:5rem;
+    }
+    .s1-eyebrow{
+      font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;
+      color:var(--blue);margin-bottom:1rem;
+      opacity:0;transform:translateY(20px);
+      transition:opacity .8s,transform .8s;
+    }
+    .s1-title{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(5rem,11vw,10rem);
+      line-height:.9;color:var(--white);
+      opacity:0;transform:translateY(30px);
+      transition:opacity .9s .1s,transform .9s .1s;
+    }
+    .s1-sub{
+      font-size:1rem;font-weight:300;color:var(--grey);
+      max-width:380px;line-height:1.75;margin-top:1.2rem;
+      opacity:0;transform:translateY(20px);
+      transition:opacity .8s .2s,transform .8s .2s;
+    }
+    body.s1-in .s1-eyebrow,
+    body.s1-in .s1-title,
+    body.s1-in .s1-sub{opacity:1;transform:none}
+
+    /* S2 — Dissolve (sem texto, só a cena) */
+    .s2-label{
+      position:absolute;top:50%;right:5vw;
+      transform:translateY(-50%);
+      text-align:right;
+      opacity:0;transition:opacity 1s;
+    }
+    .s2-label h2{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(2.5rem,5vw,4.5rem);
+      line-height:.92;
+    }
+    .s2-label p{
+      font-size:.8rem;color:var(--grey);
+      margin-top:.6rem;letter-spacing:.06em;
+    }
+    body.s2-in .s2-label{opacity:1}
+
+    /* S3 — Serviços */
+    .s3-content{
+      width:100%;padding:0 4rem;
+      display:grid;grid-template-columns:1fr 1fr;
+      gap:4rem;align-items:center;
+    }
+    .s3-left h2{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(3rem,6vw,5.5rem);
+      line-height:.92;margin-bottom:1rem;
+      opacity:0;transform:translateX(-30px);
+      transition:opacity .9s,transform .9s;
+    }
+    .s3-left p{
+      font-size:.9rem;font-weight:300;color:var(--grey);
+      line-height:1.75;max-width:380px;
+      opacity:0;transform:translateX(-20px);
+      transition:opacity .8s .1s,transform .8s .1s;
+    }
+    .s3-right{
+      display:grid;grid-template-columns:1fr 1fr;gap:1px;
+      background:rgba(255,255,255,.06);
+      opacity:0;transform:translateX(30px);
+      transition:opacity .9s .1s,transform .9s .1s;
+    }
+    body.s3-in .s3-left h2,
+    body.s3-in .s3-left p,
+    body.s3-in .s3-right{opacity:1;transform:none}
+    .s3-item{
+      background:rgba(7,10,15,.7);padding:2rem 1.5rem;
+      backdrop-filter:blur(10px);
+      pointer-events:all;
+    }
+    .s3-item-n{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:2.5rem;color:rgba(255,255,255,.1);line-height:1;
+      margin-bottom:1rem;
+    }
+    .s3-item-name{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:1.1rem;letter-spacing:.05em;margin-bottom:.5rem;
+    }
+    .s3-item-desc{font-size:.75rem;color:var(--grey);line-height:1.6}
+    .s3-item-cta{
+      display:inline-block;margin-top:1rem;
+      font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;
+      color:var(--blue);text-decoration:none;transition:color .2s;
+    }
+
+    /* S4 — Stats */
+    .s4-content{
+      text-align:center;width:100%;padding:0 4rem;
+    }
+    .s4-eyebrow{
+      font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;
+      color:var(--blue);margin-bottom:2rem;
+      opacity:0;transition:opacity .8s;
+    }
+    .s4-stats{
+      display:flex;justify-content:center;gap:6rem;
+      opacity:0;transform:translateY(30px);
+      transition:opacity .9s .1s,transform .9s .1s;
+    }
+    body.s4-in .s4-eyebrow,
+    body.s4-in .s4-stats{opacity:1;transform:none}
+    .s4-stat-n{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(3.5rem,7vw,6rem);
+      color:var(--white);line-height:1;
+    }
+    .s4-stat-l{
+      font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--grey);margin-top:.3rem;
+    }
+
+    /* S5 — CTA */
+    .s5-content{
+      text-align:center;width:100%;padding:0 4rem;
+    }
+    .s5-title{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(4rem,9vw,8rem);
+      line-height:.9;
+      opacity:0;transform:translateY(30px);
+      transition:opacity .9s,transform .9s;
+    }
+    .s5-sub{
+      font-size:.95rem;font-weight:300;color:var(--grey);
+      max-width:420px;margin:1.5rem auto 2.5rem;line-height:1.75;
+      opacity:0;transition:opacity .8s .15s;
+    }
+    .s5-btns{
+      display:flex;gap:1rem;justify-content:center;
+      opacity:0;transition:opacity .7s .25s;
+      pointer-events:all;
+    }
+    body.s5-in .s5-title,
+    body.s5-in .s5-sub,
+    body.s5-in .s5-btns{opacity:1;transform:none}
+    .btn-p{
+      background:var(--blue);color:#fff;
+      font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+      padding:.85rem 2.2rem;text-decoration:none;transition:opacity .2s;
+    }
+    .btn-p:hover{opacity:.85}
+    .btn-o{
+      background:transparent;color:rgba(255,255,255,.7);
+      font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+      padding:.85rem 2.2rem;text-decoration:none;
+      border:1px solid rgba(255,255,255,.2);transition:border-color .2s,color .2s;
+    }
+    .btn-o:hover{border-color:var(--blue);color:var(--blue)}
+
+    /* ── PROGRESS ────────────────────────────────────── */
+    .progress-dots{
+      position:fixed;right:2rem;top:50%;
+      transform:translateY(-50%);z-index:100;
+      display:flex;flex-direction:column;gap:.6rem;
+    }
+    .dot{
+      width:5px;height:5px;border-radius:50%;
+      background:rgba(255,255,255,.2);
+      transition:background .3s,transform .3s;cursor:pointer;
+    }
+    .dot.active{background:var(--blue);transform:scale(1.6)}
+
+    /* ── GRAIN ───────────────────────────────────────── */
+    .grain{
+      position:fixed;inset:0;z-index:5;
+      pointer-events:none;opacity:.025;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+<div class="grain"></div>
+
+<!-- CANVAS 3D FIXO -->
+<canvas id="scene-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Mateus Oliveira</a>
+  <ul class="nav-links">
+    <li><a href="work.html">Trabalho</a></li>
+    <li><a href="services.html">Servicos</a></li>
+    <li><a href="products.html">Produtos</a></li>
+    <li><a href="courses.html">Cursos</a></li>
+    <li><a href="about.html">Sobre</a></li>
+  </ul>
+  <a href="contact.html" class="nav-cta">Briefing</a>
+</nav>
+
+<!-- PROGRESS DOTS -->
+<div class="progress-dots" id="dots">
+  <div class="dot active" data-section="0"></div>
+  <div class="dot" data-section="1"></div>
+  <div class="dot" data-section="2"></div>
+  <div class="dot" data-section="3"></div>
+  <div class="dot" data-section="4"></div>
+</div>
+
+<!-- SCROLL CONTAINER -->
+<div id="scroll-container">
+
+  <!-- S1: INTRO -->
+  <div class="scene-section" id="s1">
+    <div class="s1-content">
+      <p class="s1-eyebrow">Creative Director · AI Cinema · Lisboa</p>
+      <h1 class="s1-title">Ideias que se<br>transformam<br>em cinema.</h1>
+      <p class="s1-sub">Producoes cinematograficas com IA. Sem camara. Sem set. Com direccao criativa real.</p>
+    </div>
+  </div>
+
+  <!-- S2: DISSOLVE -->
+  <div class="scene-section" id="s2">
+    <div class="s2-label">
+      <h2>A transformacao<br>começa aqui.</h2>
+      <p>Scroll para continuar</p>
+    </div>
+  </div>
+
+  <!-- S3: SERVICOS -->
+  <div class="scene-section" id="s3">
+    <div class="s3-content">
+      <div class="s3-left">
+        <h2>O que<br>faco.</h2>
+        <p>Producoes cinematograficas com inteligencia artificial para marcas, artistas e criadores.</p>
+      </div>
+      <div class="s3-right">
+        <div class="s3-item">
+          <div class="s3-item-n">01</div>
+          <div class="s3-item-name">Brand Films</div>
+          <div class="s3-item-desc">Narrativas cinematograficas para marcas e empresas.</div>
+          <a href="contact.html" class="s3-item-cta" style="pointer-events:all">Consultar →</a>
+        </div>
+        <div class="s3-item">
+          <div class="s3-item-n">02</div>
+          <div class="s3-item-name">Aberturas de Show</div>
+          <div class="s3-item-desc">Impacto no telao antes de entrar em palco.</div>
+          <a href="contact.html" class="s3-item-cta" style="pointer-events:all">Consultar →</a>
+        </div>
+        <div class="s3-item">
+          <div class="s3-item-n">03</div>
+          <div class="s3-item-name">Cinematic Reels</div>
+          <div class="s3-item-desc">Conteudo cinematografico para redes sociais.</div>
+          <a href="contact.html" class="s3-item-cta" style="pointer-events:all">Consultar →</a>
+        </div>
+        <div class="s3-item">
+          <div class="s3-item-n">04</div>
+          <div class="s3-item-name">Series de Conteudo</div>
+          <div class="s3-item-desc">Identidade visual consistente mes apos mes.</div>
+          <a href="contact.html" class="s3-item-cta" style="pointer-events:all">Consultar →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4: STATS -->
+  <div class="scene-section" id="s4">
+    <div class="s4-content">
+      <p class="s4-eyebrow">Numeros reais · Producao solo</p>
+      <div class="s4-stats">
+        <div>
+          <div class="s4-stat-n">5.7M+</div>
+          <div class="s4-stat-l">Views geradas</div>
+        </div>
+        <div>
+          <div class="s4-stat-n">1.5M+</div>
+          <div class="s4-stat-l">Alcance mensal</div>
+        </div>
+        <div>
+          <div class="s4-stat-n">891K+</div>
+          <div class="s4-stat-l">Interaccoes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: CTA FINAL -->
+  <div class="scene-section" id="s5">
+    <div class="s5-content">
+      <h2 class="s5-title">Tens um<br>projecto?</h2>
+      <p class="s5-sub">Preenche o briefing e envio uma proposta em ate 24h.</p>
+      <div class="s5-btns">
+        <a href="contact.html" class="btn-p">Iniciar briefing</a>
+        <a href="work.html" class="btn-o">Ver trabalho</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /scroll-container -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+
+  // ── CURSOR ──────────────────────────────────────────
+  const cur  = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let cx=0,cy=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{
+    cx=e.clientX;cy=e.clientY;
+    cur.style.transform=`translate(${cx-4}px,${cy-4}px)`;
+  });
+  (function animRing(){
+    rx+=(cx-rx)*.1;ry+=(cy-ry)*.1;
+    ring.style.transform=`translate(${rx-18}px,${ry-18}px)`;
+    requestAnimationFrame(animRing);
+  })();
+  document.querySelectorAll('a,button').forEach(el=>{
+    el.addEventListener('mouseenter',()=>cur.classList.add('big'));
+    el.addEventListener('mouseleave',()=>cur.classList.remove('big'));
+  });
+
+  // ── THREE.JS SETUP ───────────────────────────────────
+  const canvas   = document.getElementById('scene-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(innerWidth,innerHeight);
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,100);
+  camera.position.z = 1;
+
+  // ── VIDEO TEXTURE ────────────────────────────────────
+  const video = document.createElement('video');
+  video.src   = 'assets/video/dissolve.mp4';
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.load();
+  // pause immediately — scroll controls currentTime
+  video.addEventListener('loadeddata',()=>{ video.pause(); });
+
+  const videoTex = new THREE.VideoTexture(video);
+  videoTex.minFilter = THREE.LinearFilter;
+  videoTex.magFilter = THREE.LinearFilter;
+
+  // Full-screen plane
+  const planeGeo = new THREE.PlaneGeometry(2,2);
+  const planeMat = new THREE.MeshBasicMaterial({map:videoTex});
+  const plane    = new THREE.Mesh(planeGeo,planeMat);
+  scene.add(plane);
+
+  // Scale plane to fill screen maintaining video aspect
+  function scalePlane(){
+    const vAspect = 16/9; // video aspect
+    const sAspect = innerWidth/innerHeight;
+    if(sAspect > vAspect){
+      plane.scale.set(1,1,1);
+    } else {
+      plane.scale.set(sAspect/vAspect,sAspect/vAspect,1);
+    }
+  }
+  scalePlane();
+
+  // ── PARTICLES ────────────────────────────────────────
+  const PARTS = 2500;
+  const pPositions = new Float32Array(PARTS*3);
+  for(let i=0;i<PARTS;i++){
+    pPositions[i*3]   = (Math.random()-0.5)*4;
+    pPositions[i*3+1] = (Math.random()-0.5)*4;
+    pPositions[i*3+2] = (Math.random()-0.5)*2 - 0.5;
+  }
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position',new THREE.BufferAttribute(pPositions,3));
+  const pMat = new THREE.PointsMaterial({
+    color:0x1E64DC,size:.012,transparent:true,opacity:0,sizeAttenuation:true
+  });
+  const particles = new THREE.Points(pGeo,pMat);
+  scene.add(particles);
+
+  // ── SCROLL LOGIC ─────────────────────────────────────
+  const SECTIONS = 5;
+  const sections = ['s1','s2','s3','s4','s5'];
+  const dots     = document.querySelectorAll('.dot');
+  let   currentSection = 0;
+
+  function getScrollProgress(){
+    const totalH = document.body.scrollHeight - innerHeight;
+    return Math.max(0,Math.min(1,scrollY/totalH));
+  }
+
+  function getSectionProgress(sIdx){
+    const sSize = 1/SECTIONS;
+    const start = sIdx*sSize;
+    return Math.max(0,Math.min(1,(getScrollProgress()-start)/sSize));
+  }
+
+  function updateScene(){
+    const prog    = getScrollProgress();
+    const sIdx    = Math.min(Math.floor(prog*SECTIONS),SECTIONS-1);
+    const sLocal  = getSectionProgress(sIdx);
+
+    // ── Update video currentTime ──────────────────────
+    if(video.duration){
+      // S1 = frame 0, S2 = full video, S3+ = last frame
+      let vProg = 0;
+      if(sIdx === 0) vProg = 0;
+      else if(sIdx === 1) vProg = sLocal;
+      else vProg = 1;
+      video.currentTime = vProg * video.duration;
+      videoTex.needsUpdate = true;
+    }
+
+    // ── Plane opacity ─────────────────────────────────
+    // S1: full opacity, S4-S5: fade out slightly
+    let planeAlpha = 1;
+    if(sIdx >= 3){
+      planeAlpha = 1 - (sIdx-3+sLocal)/(SECTIONS-3) * 0.6;
+    }
+    planeMat.opacity = Math.max(.3,planeAlpha);
+    planeMat.transparent = true;
+
+    // ── Plane scale effect ────────────────────────────
+    // slight zoom during dissolve
+    if(sIdx === 1){
+      const s = 1 + sLocal*0.08;
+      plane.scale.setScalar(s);
+    } else {
+      scalePlane();
+    }
+
+    // ── Particles ─────────────────────────────────────
+    // appear during dissolve (s2), drift in s3-s5
+    if(sIdx === 1){
+      pMat.opacity = sLocal * 0.6;
+    } else if(sIdx >= 2){
+      pMat.opacity = 0.4;
+      particles.rotation.y += 0.001;
+      particles.rotation.x += 0.0005;
+    } else {
+      pMat.opacity = 0;
+    }
+
+    // ── Camera drift ──────────────────────────────────
+    camera.position.x += (mouseX*0.03 - camera.position.x)*0.05;
+    camera.position.y += (mouseY*0.03 - camera.position.y)*0.05;
+
+    // ── Section classes ───────────────────────────────
+    document.body.className = '';
+    document.body.classList.add(`s${sIdx+1}-in`);
+
+    // ── Dots ──────────────────────────────────────────
+    dots.forEach((d,i)=>{
+      d.classList.toggle('active',i===sIdx);
+    });
+    currentSection = sIdx;
+
+    renderer.render(scene,camera);
+  }
+
+  // ── MOUSE ────────────────────────────────────────────
+  let mouseX=0,mouseY=0;
+  document.addEventListener('mousemove',e=>{
+    mouseX=(e.clientX/innerWidth)*2-1;
+    mouseY=-(e.clientY/innerHeight)*2+1;
+  });
+
+  // ── RESIZE ───────────────────────────────────────────
+  window.addEventListener('resize',()=>{
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+    scalePlane();
+  });
+
+  // ── DOTS NAV ─────────────────────────────────────────
+  dots.forEach((d,i)=>{
+    d.addEventListener('click',()=>{
+      const totalH = document.body.scrollHeight - innerHeight;
+      const target = (i/SECTIONS)*totalH;
+      window.scrollTo({top:target,behavior:'smooth'});
+    });
+  });
+
+  // ── ANIMATE LOOP ─────────────────────────────────────
+  function animate(){
+    requestAnimationFrame(animate);
+    updateScene();
+  }
+  animate();
+
+  // ── SCROLL ───────────────────────────────────────────
+  window.addEventListener('scroll',()=>{}, {passive:true});
+
+  // init
+  setTimeout(()=>{ document.body.classList.add('s1-in'); },400);
+
+})();
+</script>
+</body>
+</html>

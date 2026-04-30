@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mateus Oliveira — AI Cinema Director</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--blue:#1E64DC;--bg:#070A0F;--white:#F0F0F0;--grey:rgba(240,240,240,.5);--border:rgba(255,255,255,.07)}
+    html{font-size:16px;scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;cursor:none;overflow-x:hidden}
+    .cursor{position:fixed;width:8px;height:8px;background:var(--white);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference}
+    .cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(255,255,255,.2);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .15s cubic-bezier(.16,1,.3,1)}
+    .grain{position:fixed;inset:0;z-index:8;pointer-events:none;opacity:.028;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+    nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.4rem 4rem;display:flex;align-items:center;justify-content:space-between;transition:background .3s}
+    nav.scrolled{background:rgba(7,10,15,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.18em;color:var(--white);text-decoration:none}
+    .nav-links{display:flex;gap:2.5rem;list-style:none}
+    .nav-links a{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6);text-decoration:none;transition:color .2s}
+    .nav-links a:hover{color:var(--blue)}
+    .nav-cta{background:var(--blue);color:#fff;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;padding:.5rem 1.3rem;text-decoration:none;transition:opacity .2s}
+    .nav-cta:hover{opacity:.85}
+    /* HERO */
+    #hero{position:relative;width:100%;height:100vh;background:#000;overflow:hidden}
+    #hero-video{width:100%;height:100%;object-fit:cover}
+    .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,10,15,.3) 0%,transparent 25%,transparent 70%,rgba(7,10,15,.7) 100%)}
+    #sound-btn{position:absolute;bottom:3rem;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(12px);color:var(--white);font-family:'DM Sans',sans-serif;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;padding:.65rem 1.8rem;cursor:none;display:flex;align-items:center;gap:.6rem;transition:border-color .2s;z-index:10}
+    #sound-btn:hover{border-color:var(--blue)}
+    #sound-btn::before,#sound-btn::after{content:'';position:absolute;inset:-8px;border:1px solid rgba(255,255,255,.1);animation:pulseRing 2.5s ease-out infinite}
+    #sound-btn::after{inset:-18px;animation-delay:.9s}
+    @keyframes pulseRing{0%{opacity:.5;transform:scale(1)}100%{opacity:0;transform:scale(1.15)}}
+    /* TV OFF */
+    #tv-off{position:fixed;inset:0;z-index:500;background:#000;display:none;align-items:center;justify-content:center}
+    #tv-off.on{display:flex}
+    .tv-line{width:100%;height:3px;background:linear-gradient(90deg,transparent,#fff,var(--blue),#fff,transparent);animation:tvOff .65s cubic-bezier(.87,0,.13,1) forwards}
+    @keyframes tvOff{0%{transform:scaleX(1) scaleY(30);opacity:1}65%{transform:scaleX(1) scaleY(1);opacity:1}100%{transform:scaleX(0) scaleY(1);opacity:0}}
+    /* SECTIONS */
+    section{padding:7rem 4rem}
+    .section-eyebrow{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:.8rem}
+    .section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.8rem,5vw,4.5rem);line-height:.95;margin-bottom:.8rem}
+    .section-sub{font-size:.9rem;font-weight:300;color:var(--grey);max-width:500px;line-height:1.75}
+    /* ABOUT */
+    #about{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;border-bottom:1px solid var(--border)}
+    .about-bio{font-size:.95rem;font-weight:300;color:var(--grey);line-height:1.8;margin:1.2rem 0 2rem}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+    .stat-box{background:var(--bg);padding:2rem 1.5rem}
+    .stat-n{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;color:var(--blue);line-height:1;margin-bottom:.3rem}
+    .stat-l{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grey)}
+    /* WORK */
+    #work{border-bottom:1px solid var(--border)}
+    .work-row-top{display:grid;grid-template-columns:2fr 1fr;gap:1px;background:var(--border);margin-top:3rem}
+    .work-row-top-right{display:grid;grid-template-rows:1fr 1fr;gap:1px;background:var(--border)}
+    .work-row-bottom{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);margin-top:1px}
+    .work-item{position:relative;overflow:hidden;background:rgba(10,15,25,.8);cursor:none}
+    .work-item.ratio-16-9::before{content:'';display:block;padding-top:56.25%}
+    .work-item.ratio-9-16::before{content:'';display:block;padding-top:177.78%}
+    .work-item video,.work-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.16,1,.3,1),filter .4s;filter:brightness(.8)}
+    .work-item:hover video,.work-item:hover img{transform:scale(1.04);filter:brightness(.6)}
+    .work-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.9) 0%,transparent 55%);opacity:1;display:flex;flex-direction:column;justify-content:flex-end;padding:1.2rem}
+    .work-overlay-title{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.05em}
+    .work-overlay-tag{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-top:.2rem}
+    /* LIGHTBOX */
+    .lightbox{position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.96);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+    .lightbox.open{opacity:1;visibility:visible}
+    .lightbox-inner{position:relative;width:90vw;max-width:1100px}
+    .lightbox-inner video{width:100%;display:block;max-height:85vh;object-fit:contain}
+    .lightbox-close{position:absolute;top:-2.5rem;right:0;background:none;border:none;color:rgba(255,255,255,.5);font-size:.65rem;letter-spacing:.16em;text-transform:uppercase;cursor:none;transition:color .2s}
+    .lightbox-close:hover{color:var(--white)}
+    .lightbox-info{margin-top:1rem;display:flex;justify-content:space-between;align-items:center}
+    .lightbox-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.05em}
+    .lightbox-tag{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+    /* SERVICES */
+    #services{background:rgba(10,15,25,.5);border-bottom:1px solid var(--border)}
+    .services-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);margin-top:3rem}
+    .service-card{background:var(--bg);padding:2.5rem 2rem;transition:background .25s}
+    .service-card:hover{background:rgba(15,20,30,.9)}
+    .service-n{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:rgba(255,255,255,.05);line-height:1;margin-bottom:1.5rem}
+    .service-name{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.05em;margin-bottom:.6rem}
+    .service-desc{font-size:.78rem;font-weight:300;color:var(--grey);line-height:1.7;margin-bottom:1.5rem}
+    .service-cta{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);text-decoration:none;transition:opacity .2s}
+    .service-cta:hover{opacity:.7}
+    /* PRODUCTS */
+    #products{border-bottom:1px solid var(--border)}
+    .products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:3rem}
+    .prod-card{background:var(--bg);padding:2.5rem 2rem;position:relative;transition:background .25s}
+    .prod-card:hover{background:rgba(15,20,30,.9)}
+    .prod-card.featured{background:rgba(30,100,220,.04);border:1px solid rgba(30,100,220,.18)}
+    .prod-badge{position:absolute;top:1.5rem;right:1.5rem;background:var(--blue);color:#fff;font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;padding:.25rem .6rem;font-weight:500}
+    .prod-tier{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--grey);margin-bottom:.6rem}
+    .prod-name{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.04em;margin-bottom:.5rem}
+    .prod-desc{font-size:.78rem;font-weight:300;color:var(--grey);line-height:1.65;margin-bottom:1.5rem}
+    .prod-price{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--white);margin-bottom:1rem}
+    .prod-link{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);text-decoration:none}
+    /* COURSES */
+    #courses{background:rgba(10,15,25,.5);border-bottom:1px solid var(--border)}
+    .courses-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:3rem}
+    .course-card{background:var(--bg);padding:2.5rem 2rem;display:flex;flex-direction:column}
+    .course-step{font-family:'Bebas Neue',sans-serif;font-size:4rem;color:rgba(255,255,255,.04);line-height:1;margin-bottom:.8rem}
+    .course-badge{display:inline-block;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;border:1px solid rgba(255,255,255,.12);color:var(--grey);padding:.2rem .6rem;margin-bottom:.8rem}
+    .course-name{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.04em;margin-bottom:.5rem}
+    .course-desc{font-size:.78rem;font-weight:300;color:var(--grey);line-height:1.7;flex:1;margin-bottom:1.2rem}
+    .course-for{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:1rem}
+    .course-price{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--white)}
+    /* FINAL CTA */
+    #contact{text-align:center;position:relative;overflow:hidden}
+    #contact::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 50% 50%,rgba(30,100,220,.07) 0%,transparent 70%)}
+    #contact h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,8vw,7rem);line-height:.9;margin-bottom:1rem;position:relative}
+    #contact p{font-size:.95rem;font-weight:300;color:var(--grey);max-width:420px;margin:0 auto 2.5rem;line-height:1.75;position:relative}
+    .cta-btns{display:flex;gap:1rem;justify-content:center;position:relative}
+    .btn-primary{background:var(--blue);color:#fff;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;padding:.9rem 2.2rem;text-decoration:none;transition:opacity .2s}
+    .btn-primary:hover{opacity:.85}
+    .btn-outline{background:transparent;color:rgba(255,255,255,.6);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;padding:.9rem 2.2rem;text-decoration:none;border:1px solid rgba(255,255,255,.15);transition:border-color .2s,color .2s}
+    .btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+    /* FOOTER */
+    footer{padding:4rem 4rem 2rem;border-top:1px solid var(--border)}
+    .footer-grid{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:3rem;margin-bottom:3rem}
+    .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.1em;color:var(--blue);margin-bottom:.5rem}
+    .footer-tagline{font-size:.78rem;color:var(--grey);line-height:1.7;max-width:220px}
+    .footer-col h4{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--grey);margin-bottom:1rem}
+    .footer-col a{display:block;font-size:.78rem;color:rgba(255,255,255,.45);text-decoration:none;margin-bottom:.5rem;transition:color .2s}
+    .footer-col a:hover{color:var(--blue)}
+    .footer-bottom{padding-top:2rem;border-top:1px solid var(--border);display:flex;justify-content:space-between}
+    .footer-copy{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2)}
+    /* REVEAL */
+    .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+    .reveal.visible{opacity:1;transform:none}
+    .d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
+    @media(max-width:1024px){#about{grid-template-columns:1fr;gap:3rem}.services-grid{grid-template-columns:1fr 1fr}.courses-grid{grid-template-columns:1fr 1fr}.footer-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:768px){nav{padding:1rem 1.5rem}.nav-links{display:none}section{padding:4rem 1.5rem}#about{grid-template-columns:1fr}.work-row-top{grid-template-columns:1fr}.work-row-bottom{grid-template-columns:repeat(2,1fr)}.services-grid,.courses-grid,.products-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr}footer{padding:3rem 1.5rem 2rem}body{cursor:auto}.cursor,.cursor-ring{display:none}}
+  </style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+<div class="grain"></div>
+
+<nav id="nav">
+  <a href="index.html" class="nav-logo">Mateus Oliveira</a>
+  <ul class="nav-links">
+    <li><a href="#work">Trabalho</a></li>
+    <li><a href="#services">Servicos</a></li>
+    <li><a href="#products">Produtos</a></li>
+    <li><a href="#courses">Cursos</a></li>
+    <li><a href="#contact">Contacto</a></li>
+  </ul>
+  <a href="https://tally.so/r/0QbJKA" target="_blank" class="nav-cta">Briefing</a>
+</nav>
+
+<section id="hero">
+  <video id="hero-video" src="assets/video/hero.mp4" muted playsinline preload="auto"></video>
+  <div class="hero-overlay"></div>
+  <button id="sound-btn">🔇&nbsp;&nbsp;Ativar som</button>
+</section>
+
+<div id="tv-off"><div class="tv-line" id="tv-line"></div></div>
+
+<section id="about">
+  <div>
+    <p class="section-eyebrow reveal">Quem sou</p>
+    <h2 class="section-title reveal d1">Cresci no Rio<br>fazendo musica.</h2>
+    <p class="about-bio reveal d2">Trabalhei com grandes editoras internacionais, videoclipes e producao artistica. Hoje, em Lisboa, dirijo filmes e conteudos cinematograficos com inteligencia artificial — sem camara, sem set, com direccao criativa real.</p>
+    <a href="#contact" class="service-cta reveal d3">Trabalhar comigo →</a>
+  </div>
+  <div class="stats-grid reveal d2">
+    <div class="stat-box"><div class="stat-n">5.7M+</div><div class="stat-l">Views geradas</div></div>
+    <div class="stat-box"><div class="stat-n">891K</div><div class="stat-l">Interaccoes</div></div>
+    <div class="stat-box"><div class="stat-n">100%</div><div class="stat-l">Solo production</div></div>
+    <div class="stat-box"><div class="stat-n">2024</div><div class="stat-l">Fundacao</div></div>
+  </div>
+</section>
+
+<section id="work">
+  <div class="section-header">
+    <p class="section-eyebrow reveal">Trabalho seleccionado</p>
+    <h2 class="section-title reveal d1">Projectos em destaque</h2>
+  </div>
+  <div class="work-row-top reveal d2">
+    <div class="work-item ratio-16-9">
+      <video src="assets/video/corny.mp4" muted playsinline poster="assets/img/corny.png"></video>
+      <div class="work-overlay"><div class="work-overlay-title">That Shit's Corny</div><div class="work-overlay-tag">Curta · AI Cinema</div></div>
+    </div>
+    <div class="work-row-top-right">
+      <div class="work-item ratio-16-9">
+        <video src="assets/video/laland.mp4" muted playsinline poster="assets/img/laland.png"></video>
+        <div class="work-overlay"><div class="work-overlay-title">La La Land</div><div class="work-overlay-tag">Curta · AI Cinema</div></div>
+      </div>
+      <div class="work-item ratio-16-9">
+        <video src="assets/video/hechicero.mp4" muted playsinline poster="assets/img/hechicero.png"></video>
+        <div class="work-overlay"><div class="work-overlay-title">El Hechicero</div><div class="work-overlay-tag">Brand Film · AI Cinema</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="work-row-bottom reveal d3">
+    <div class="work-item ratio-9-16">
+      <video src="assets/video/motion.mp4" muted playsinline poster="assets/img/motion.png"></video>
+      <div class="work-overlay"><div class="work-overlay-title">Motion Streetwear</div><div class="work-overlay-tag">Comercial</div></div>
+    </div>
+    <div class="work-item ratio-9-16">
+      <video src="assets/video/neymar.mp4" muted playsinline poster="assets/img/neymar.png"></video>
+      <div class="work-overlay"><div class="work-overlay-title">Neymar</div><div class="work-overlay-tag">AI Cinema</div></div>
+    </div>
+    <div class="work-item ratio-9-16">
+      <video src="assets/video/every-joker.mp4" muted playsinline poster="assets/img/every-joker.png"></video>
+      <div class="work-overlay"><div class="work-overlay-title">Every Joker</div><div class="work-overlay-tag">Viral · AI Cinema</div></div>
+    </div>
+    <div class="work-item ratio-9-16">
+      <video src="assets/video/rio-model.mp4" muted playsinline poster="assets/img/rio-model.png"></video>
+      <div class="work-overlay"><div class="work-overlay-title">Rio Model</div><div class="work-overlay-tag">Comercial</div></div>
+    </div>
+    <div class="work-item ratio-9-16">
+      <video src="assets/video/gym-ugc.mp4" muted playsinline poster="assets/img/gym-ugc.png"></video>
+      <div class="work-overlay"><div class="work-overlay-title">Gym UGC</div><div class="work-overlay-tag">UGC · AI Cinema</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="services">
+  <p class="section-eyebrow reveal">Servicos</p>
+  <h2 class="section-title reveal d1">O que faco</h2>
+  <div class="services-grid">
+    <div class="service-card reveal d1"><div class="service-n">01</div><div class="service-name">Brand Films</div><div class="service-desc">Narrativas cinematograficas para marcas e empresas com direccao criativa real.</div><a href="https://tally.so/r/0QbJKA" target="_blank" class="service-cta">Consultar →</a></div>
+    <div class="service-card reveal d2"><div class="service-n">02</div><div class="service-name">Aberturas de Show</div><div class="service-desc">Impacto no telao antes de entrar em palco. Cinematografico, sem compromisso.</div><a href="https://tally.so/r/0QbJKA" target="_blank" class="service-cta">Consultar →</a></div>
+    <div class="service-card reveal d3"><div class="service-n">03</div><div class="service-name">Cinematic Reels</div><div class="service-desc">Conteudo para redes sociais com nivel cinematografico. Para artistas e marcas.</div><a href="https://tally.so/r/0QbJKA" target="_blank" class="service-cta">Consultar →</a></div>
+    <div class="service-card reveal d4"><div class="service-n">04</div><div class="service-name">Series de Conteudo</div><div class="service-desc">Identidade visual consistente mes apos mes. Pack recorrente com prioridade.</div><a href="https://tally.so/r/0QbJKA" target="_blank" class="service-cta">Consultar →</a></div>
+  </div>
+</section>
+
+<section id="products">
+  <p class="section-eyebrow reveal">Produtos digitais</p>
+  <h2 class="section-title reveal d1">Aprende o metodo</h2>
+  <p class="section-sub reveal d2">Guias, templates e frameworks usados em producao real.</p>
+  <div class="products-grid">
+    <div class="prod-card reveal d1"><div class="prod-tier">Entrada</div><div class="prod-name">Pack de Prompts UGC</div><div class="prod-desc">50 prompts prontos a usar para videos UGC cinematograficos.</div><div class="prod-price">9,90</div><a href="#" class="prod-link">Ver produto →</a></div>
+    <div class="prod-card featured reveal d2"><div class="prod-badge">Mais popular</div><div class="prod-tier">Destaque</div><div class="prod-name">Viral Video Framework</div><div class="prod-desc">O sistema exacto que gerou 5,7M de views. Framework documentado.</div><div class="prod-price">19,90</div><a href="#" class="prod-link">Ver produto →</a></div>
+    <div class="prod-card reveal d3"><div class="prod-tier">Premium</div><div class="prod-name">Metodo das 5 Ancoras</div><div class="prod-desc">Pipeline completo de producao cinematografica com IA. 47 paginas.</div><div class="prod-price">99</div><a href="#" class="prod-link">Ver produto →</a></div>
+  </div>
+</section>
+
+<section id="courses">
+  <p class="section-eyebrow reveal">Formacao</p>
+  <h2 class="section-title reveal d1">Cursos · Em breve</h2>
+  <div class="courses-grid">
+    <div class="course-card reveal d1"><div class="course-step">01</div><span class="course-badge">Em breve</span><div class="course-name">IA do Zero</div><div class="course-desc">Em 7 dias usas IA para criar textos, ideias, imagens e conteudo — mesmo comecando do zero absoluto.</div><div class="course-for">Para quem nunca abriu o ChatGPT</div><div class="course-price">€27</div></div>
+    <div class="course-card reveal d2"><div class="course-step">02</div><span class="course-badge">Em breve</span><div class="course-name">IA para Conteudo Visual</div><div class="course-desc">Aprende a transformar ideias em videos cinematograficos com IA para redes sociais, marcas e clientes.</div><div class="course-for">Para criadores que querem subir de nivel</div><div class="course-price">€197</div></div>
+    <div class="course-card reveal d3"><div class="course-step">03</div><span class="course-badge">Em breve</span><div class="course-name">AI Cinema Pro</div><div class="course-desc">O metodo completo que gerou 5,7M de views. Pipeline profissional de direccao criativa com IA.</div><div class="course-for">Para nivel de producao de estudio</div><div class="course-price">€497</div></div>
+  </div>
+</section>
+
+<section id="contact">
+  <h2 class="reveal">Tens um<br>projecto?</h2>
+  <p class="reveal d1">Preenche o briefing e envio uma proposta em ate 24h.</p>
+  <div class="cta-btns reveal d2">
+    <a href="https://tally.so/r/0QbJKA" target="_blank" class="btn-primary">Iniciar briefing</a>
+    <a href="https://instagram.com/mateusoliveira.ai" target="_blank" class="btn-outline">Instagram</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div><div class="footer-logo">MO</div><p class="footer-tagline">Producoes cinematograficas com IA. Lisboa, Portugal.</p></div>
+    <div class="footer-col"><h4>Navegacao</h4><a href="#about">Sobre</a><a href="#work">Trabalho</a><a href="#services">Servicos</a><a href="#courses">Cursos</a></div>
+    <div class="footer-col"><h4>Servicos</h4><a href="https://tally.so/r/0QbJKA" target="_blank">Brand Films</a><a href="https://tally.so/r/0QbJKA" target="_blank">Aberturas de Show</a><a href="https://tally.so/r/0QbJKA" target="_blank">Cinematic Reels</a></div>
+    <div class="footer-col"><h4>Contacto</h4><a href="https://instagram.com/mateusoliveira.ai" target="_blank">Instagram</a><a href="https://tally.so/r/0QbJKA" target="_blank">Briefing</a></div>
+  </div>
+  <div class="footer-bottom"><p class="footer-copy">2026 Mateus Oliveira. Todos os direitos reservados.</p></div>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lb-close">Fechar</button>
+    <video id="lb-video" controls playsinline></video>
+    <div class="lightbox-info">
+      <div><div class="lightbox-title" id="lb-title"></div><div class="lightbox-tag" id="lb-tag"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // CURSOR
+  const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+  let cx=0,cy=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;cur.style.transform=`translate(${cx-4}px,${cy-4}px)`});
+  (function a(){rx+=(cx-rx)*.1;ry+=(cy-ry)*.1;ring.style.transform=`translate(${rx-18}px,${ry-18}px)`;requestAnimationFrame(a)})();
+
+  // NAV SCROLL
+  window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>40),{passive:true});
+
+  // HERO VIDEO
+  const video=document.getElementById('hero-video');
+  const btn=document.getElementById('sound-btn');
+  const tvOff=document.getElementById('tv-off');
+  const LOOP=5.0;
+  let soundActive=false;
+
+  video.addEventListener('loadeddata',()=>video.play().catch(()=>{}));
+  video.addEventListener('timeupdate',()=>{
+    if(!soundActive&&video.currentTime>=LOOP) video.currentTime=0;
+  });
+  video.addEventListener('ended',()=>{
+    if(soundActive) doTvOff();
+  });
+
+  btn.addEventListener('click',()=>{
+    if(soundActive) return;
+    soundActive=true;
+    btn.style.display='none';
+    video.currentTime=LOOP;
+    video.muted=false;
+    video.loop=false;
+    video.play().catch(()=>{video.muted=true;video.play()});
+  });
+
+  function doTvOff(){
+    tvOff.classList.add('on');
+    setTimeout(()=>{
+      tvOff.classList.remove('on');
+      document.getElementById('hero').style.display='none';
+      window.scrollTo({top:0,behavior:'instant'});
+    },750);
+  }
+
+  // HOVER VIDEO PLAY
+  document.querySelectorAll('.work-item video').forEach(v=>{
+    const p=v.closest('.work-item');
+    p.addEventListener('mouseenter',()=>v.play().catch(()=>{}));
+    p.addEventListener('mouseleave',()=>{v.pause();v.currentTime=0});
+  });
+
+  // LIGHTBOX
+  const lb=document.getElementById('lightbox');
+  const lbVideo=document.getElementById('lb-video');
+  const lbClose=document.getElementById('lb-close');
+  const lbTitle=document.getElementById('lb-title');
+  const lbTag=document.getElementById('lb-tag');
+
+  document.querySelectorAll('.work-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      const v=item.querySelector('video');
+      if(!v) return;
+      const src=v.src||v.getAttribute('src');
+      lbVideo.src=src;
+      lbVideo.muted=false;
+      lbTitle.textContent=item.querySelector('.work-overlay-title')?.textContent||'';
+      lbTag.textContent=item.querySelector('.work-overlay-tag')?.textContent||'';
+      lb.classList.add('open');
+      document.body.style.overflow='hidden';
+      lbVideo.play().catch(()=>{lbVideo.muted=true;lbVideo.play()});
+    });
+  });
+  lbClose.addEventListener('click',closeLb);
+  lb.addEventListener('click',e=>{if(e.target===lb)closeLb()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLb()});
+  function closeLb(){lb.classList.remove('open');document.body.style.overflow='';lbVideo.pause();lbVideo.src=''}
+
+  // REVEAL ON SCROLL
+  const revels=document.querySelectorAll('.reveal');
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}});
+  },{threshold:.12});
+  revels.forEach(el=>obs.observe(el));
+})();
+</script>
+</body>
+</html>

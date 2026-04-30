@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mateus Oliveira — AI Cinema Director</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --blue:#1E64DC;
+      --bg:#070A0F;
+      --white:#F0F0F0;
+      --grey:rgba(240,240,240,.4);
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;cursor:none;overflow-x:hidden}
+
+    /* CURSOR */
+    .cursor{position:fixed;width:8px;height:8px;background:var(--blue);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference}
+    .cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(30,100,220,.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .18s cubic-bezier(.16,1,.3,1),width .2s,height .2s}
+
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.5rem 4rem;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(7,10,15,.8),transparent)}
+    .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.16em;color:var(--white);text-decoration:none}
+    .nav-links{display:flex;gap:2.5rem;list-style:none}
+    .nav-links a{font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7);text-decoration:none;transition:color .2s}
+    .nav-links a:hover{color:var(--blue)}
+    .nav-cta{background:var(--blue);color:#fff;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;padding:.55rem 1.4rem;text-decoration:none;transition:opacity .2s}
+    .nav-cta:hover{opacity:.85}
+
+    /* ── DISSOLVE SECTION ─────────────────────────── */
+    .dissolve-section{
+      position:relative;
+      height:400vh; /* scroll space */
+    }
+    .dissolve-sticky{
+      position:sticky;
+      top:0;
+      width:100%;
+      height:100vh;
+      overflow:hidden;
+    }
+    #dissolve-canvas{
+      position:absolute;inset:0;
+      width:100%;height:100%;
+      display:block;
+    }
+    .dissolve-overlay{
+      position:absolute;inset:0;
+      background:linear-gradient(to bottom,rgba(7,10,15,.3) 0%,transparent 20%,transparent 80%,rgba(7,10,15,.5) 100%);
+      pointer-events:none;
+    }
+
+    /* texto que aparece durante a dissolução */
+    .dissolve-text{
+      position:absolute;
+      top:50%;right:5vw;
+      transform:translateY(-50%);
+      text-align:right;
+      z-index:10;
+      pointer-events:none;
+    }
+    .dissolve-eyebrow{
+      font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;
+      color:var(--blue);margin-bottom:.8rem;
+      opacity:0;transition:opacity .6s;
+    }
+    .dissolve-title{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(3rem,6vw,5.5rem);
+      line-height:.92;color:var(--white);
+      opacity:0;transition:opacity .6s .1s;
+    }
+    .dissolve-sub{
+      font-size:.85rem;font-weight:300;color:var(--grey);
+      margin-top:.8rem;line-height:1.7;
+      opacity:0;transition:opacity .6s .2s;
+    }
+    .dissolve-section.text-visible .dissolve-eyebrow,
+    .dissolve-section.text-visible .dissolve-title,
+    .dissolve-section.text-visible .dissolve-sub{opacity:1}
+
+    /* progress bar */
+    .dissolve-progress{
+      position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+      display:flex;flex-direction:column;align-items:center;gap:.5rem;
+      opacity:.5;
+    }
+    .dissolve-progress span{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:var(--white)}
+    .dissolve-bar-track{width:120px;height:1px;background:rgba(255,255,255,.2)}
+    .dissolve-bar-fill{height:1px;background:var(--blue);width:0%;transition:width .1s}
+
+    /* ── CONTENT AFTER ───────────────────────────── */
+    .content-after{
+      background:var(--bg);
+      padding:8rem 4rem;
+      text-align:center;
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+    .content-after h2{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(3rem,7vw,6rem);
+      margin-bottom:1rem;
+    }
+    .content-after p{
+      font-size:.95rem;font-weight:300;color:var(--grey);
+      max-width:480px;margin:0 auto 2.5rem;line-height:1.75;
+    }
+    .btn-blue{
+      display:inline-block;background:var(--blue);color:#fff;
+      font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+      padding:.85rem 2.2rem;text-decoration:none;transition:opacity .2s;
+    }
+    .btn-blue:hover{opacity:.85}
+  </style>
+</head>
+<body>
+
+<div class="cursor"></div>
+<div class="cursor-ring"></div>
+
+<nav>
+  <a href="index.html" class="nav-logo">Mateus Oliveira</a>
+  <ul class="nav-links">
+    <li><a href="work.html">Trabalho</a></li>
+    <li><a href="services.html">Servicos</a></li>
+    <li><a href="products.html">Produtos</a></li>
+    <li><a href="courses.html">Cursos</a></li>
+    <li><a href="about.html">Sobre</a></li>
+  </ul>
+  <a href="contact.html" class="nav-cta">Briefing</a>
+</nav>
+
+<!-- DISSOLVE SCROLL SECTION -->
+<div class="dissolve-section" id="dissolve-section">
+  <div class="dissolve-sticky">
+    <canvas id="dissolve-canvas"></canvas>
+    <div class="dissolve-overlay"></div>
+
+    <div class="dissolve-text">
+      <p class="dissolve-eyebrow">Creative Director · AI Cinema</p>
+      <h2 class="dissolve-title">Ideias que<br>se transformam.</h2>
+      <p class="dissolve-sub">Lisboa · Portugal<br>AI Cinema · 2024</p>
+    </div>
+
+    <div class="dissolve-progress">
+      <span>scroll</span>
+      <div class="dissolve-bar-track">
+        <div class="dissolve-bar-fill" id="dissolve-bar"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT AFTER -->
+<div class="content-after">
+  <h2>Ver o trabalho</h2>
+  <p>Producoes cinematograficas com IA para marcas, artistas e criadores.</p>
+  <a href="work.html" class="btn-blue">Ver portfolio</a>
+</div>
+
+<script>
+(function(){
+  // ── CURSOR ──────────────────────────────────────
+  const cur = document.querySelector('.cursor');
+  const ring = document.querySelector('.cursor-ring');
+  let cx=0,cy=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{
+    cx=e.clientX;cy=e.clientY;
+    cur.style.transform=`translate(${cx-4}px,${cy-4}px)`;
+  });
+  (function animRing(){
+    rx+=(cx-rx)*.1;ry+=(cy-ry)*.1;
+    ring.style.transform=`translate(${rx-18}px,${ry-18}px)`;
+    requestAnimationFrame(animRing);
+  })();
+
+  // ── SCROLL DISSOLVE ─────────────────────────────
+  const TOTAL_FRAMES = 300;
+  const canvas  = document.getElementById('dissolve-canvas');
+  const ctx     = canvas.getContext('2d');
+  const section = document.getElementById('dissolve-section');
+  const bar     = document.getElementById('dissolve-bar');
+
+  // resize canvas
+  function resizeCanvas(){
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // preload frames
+  const frames = [];
+  let loadedCount = 0;
+  let currentFrame = 0;
+
+  function drawFrame(img){
+    if(!img) return;
+    const cw = canvas.width, ch = canvas.height;
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const scale = Math.max(cw/iw, ch/ih);
+    const dw = iw*scale, dh = ih*scale;
+    const dx = (cw-dw)/2, dy = (ch-dh)/2;
+    ctx.clearRect(0,0,cw,ch);
+    ctx.drawImage(img, dx, dy, dw, dh);
+  }
+
+  function loadFrames(){
+    for(let i=0; i<TOTAL_FRAMES; i++){
+      const img = new Image();
+      const n   = String(i).padStart(3,'0');
+      img.src   = `assets/frames/frame_${n}.jpg`;
+      img.onload = ()=>{
+        loadedCount++;
+        // draw first frame immediately when loaded
+        if(i===0) drawFrame(img);
+      };
+      frames[i] = img;
+    }
+  }
+  loadFrames();
+
+  // scroll handler
+  function onScroll(){
+    const rect     = section.getBoundingClientRect();
+    const sH       = section.offsetHeight;
+    const vH       = window.innerHeight;
+    const scrolled  = -rect.top;
+    const maxScroll = sH - vH;
+    const progress  = Math.max(0, Math.min(1, scrolled / maxScroll));
+
+    const frameIndex = Math.min(
+      Math.floor(progress * (TOTAL_FRAMES - 1)),
+      TOTAL_FRAMES - 1
+    );
+
+    if(frameIndex !== currentFrame){
+      currentFrame = frameIndex;
+      if(frames[frameIndex] && frames[frameIndex].complete){
+        drawFrame(frames[frameIndex]);
+      }
+    }
+
+    // progress bar
+    bar.style.width = (progress * 100) + '%';
+
+    // show text after 30% scroll
+    if(progress > 0.3){
+      section.classList.add('text-visible');
+    } else {
+      section.classList.remove('text-visible');
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+})();
+</script>
+</body>
+</html>

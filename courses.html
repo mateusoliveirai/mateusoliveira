@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cursos — Mateus Oliveira · AI Cinema</title>
+  <meta name="description" content="Aprende a criar conteudo cinematografico com IA. De zero ao nivel profissional." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23070A0F'/><text x='16' y='22' text-anchor='middle' font-size='18' fill='%231E64DC' font-family='serif'>M</text></svg>" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── PAGE HERO ─────────────────────────────────────── */
+    .page-hero {
+      min-height: 50vh;
+      display: flex; flex-direction: column;
+      justify-content: flex-end;
+      padding: calc(var(--nav-h) + 4rem) 4rem 4rem;
+      position: relative; overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse 60% 70% at 80% 30%, rgba(30,100,220,.15) 0%, transparent 65%);
+    }
+    .page-hero-content { position: relative; z-index: 1; }
+    .page-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 7vw, 7rem);
+      line-height: .92; letter-spacing: .02em;
+      margin: .6rem 0 1rem;
+    }
+    .page-hero-sub {
+      font-size: 1rem; font-weight: 300;
+      color: var(--grey2); max-width: 480px;
+      line-height: 1.75;
+    }
+
+    /* ── ESCADA ────────────────────────────────────────── */
+    .courses-section { padding: 6rem 4rem; }
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--border);
+      margin-top: 3rem;
+    }
+    .course-card {
+      background: var(--bg2);
+      padding: 3rem 2.5rem;
+      position: relative;
+      transition: background .25s;
+      display: flex; flex-direction: column;
+    }
+    .course-card:hover { background: var(--bg3); }
+    .course-card.featured {
+      background: var(--bg3);
+      border: 1px solid rgba(30,100,220,.25);
+    }
+    .course-step {
+      font-family: var(--font-display);
+      font-size: 5rem; color: var(--border);
+      line-height: 1; margin-bottom: 1.5rem;
+      transition: color .25s;
+    }
+    .course-card:hover .course-step { color: var(--border2); }
+    .course-badge {
+      display: inline-block;
+      font-size: .6rem; letter-spacing: .16em;
+      text-transform: uppercase;
+      padding: .3rem .8rem; margin-bottom: 1rem;
+      border: 1px solid;
+    }
+    .badge-soon { border-color: var(--grey); color: var(--grey); }
+    .badge-live { border-color: var(--gold); color: var(--gold); background: rgba(30,100,220,.08); }
+    .badge-featured { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 500; }
+    .course-name {
+      font-family: var(--font-display);
+      font-size: 2rem; letter-spacing: .04em;
+      line-height: 1.05; margin-bottom: .8rem;
+    }
+    .course-promise {
+      font-size: .85rem; font-weight: 300;
+      color: var(--grey2); line-height: 1.7;
+      margin-bottom: 1.5rem; flex: 1;
+    }
+    .course-for {
+      font-size: .7rem; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--grey);
+      margin-bottom: 1.5rem;
+    }
+    .course-for span { color: var(--white2); }
+    .course-includes {
+      list-style: none; margin-bottom: 2rem;
+    }
+    .course-includes li {
+      font-size: .8rem; color: var(--grey2);
+      padding: .35rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex; gap: .6rem; align-items: flex-start;
+    }
+    .course-includes li::before {
+      content: '—'; color: var(--gold); flex-shrink: 0;
+    }
+    .course-price {
+      font-family: var(--font-display);
+      font-size: 2.8rem; color: var(--white);
+      line-height: 1; margin-bottom: 1.5rem;
+    }
+    .course-price .price-note {
+      font-family: var(--font-body);
+      font-size: .75rem; color: var(--grey);
+      font-weight: 300; margin-left: .3rem;
+    }
+    .course-btn {
+      display: block; text-align: center;
+      font-size: .72rem; letter-spacing: .14em;
+      text-transform: uppercase; padding: .9rem;
+      border: none; cursor: pointer;
+      transition: all .2s; text-decoration: none;
+      font-family: var(--font-body);
+    }
+    .course-btn-primary { background: var(--gold); color: #000; font-weight: 500; }
+    .course-btn-primary:hover { background: var(--gold-lite); transform: translateY(-1px); }
+    .course-btn-outline {
+      background: transparent; color: var(--grey2);
+      border: 1px solid var(--border2);
+    }
+    .course-btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .course-btn-disabled {
+      background: var(--border); color: var(--grey);
+      cursor: not-allowed; opacity: .6;
+    }
+
+    /* ── ESCADA VISUAL ─────────────────────────────────── */
+    .ladder-section {
+      padding: 5rem 4rem;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .ladder-steps {
+      display: flex; align-items: center;
+      gap: 0; margin-top: 3rem;
+      overflow-x: auto;
+    }
+    .ladder-step {
+      flex: 1; padding: 2rem 1.5rem;
+      border: 1px solid var(--border);
+      position: relative; background: var(--bg);
+      min-width: 200px;
+    }
+    .ladder-step::after {
+      content: '→';
+      position: absolute; right: -1.2rem; top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.2rem; color: var(--gold); z-index: 2;
+    }
+    .ladder-step:last-child::after { display: none; }
+    .ladder-step-n {
+      font-family: var(--font-display);
+      font-size: 2.5rem; color: var(--border2); line-height: 1;
+    }
+    .ladder-step-name {
+      font-family: var(--font-display);
+      font-size: 1rem; letter-spacing: .06em;
+      margin: .5rem 0 .3rem;
+    }
+    .ladder-step-price {
+      font-size: .8rem; color: var(--gold);
+    }
+    .ladder-step-desc {
+      font-size: .72rem; color: var(--grey); margin-top: .3rem;
+    }
+
+    /* ── FAQ ───────────────────────────────────────────── */
+    .faq-section { padding: 5rem 4rem; }
+    .faq-list { margin-top: 2.5rem; max-width: 760px; }
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 0;
+    }
+    .faq-q {
+      font-family: var(--font-display);
+      font-size: 1.1rem; letter-spacing: .04em;
+      cursor: pointer; display: flex;
+      justify-content: space-between; align-items: center;
+    }
+    .faq-q::after { content: '+'; color: var(--gold); font-size: 1.4rem; }
+    .faq-a {
+      font-size: .85rem; font-weight: 300;
+      color: var(--grey2); line-height: 1.75;
+      margin-top: 1rem; display: none;
+    }
+    .faq-item.open .faq-q::after { content: '−'; }
+    .faq-item.open .faq-a { display: block; }
+
+    /* ── CTA FINAL ─────────────────────────────────────── */
+    .final-cta {
+      padding: 6rem 4rem; text-align: center;
+      border-top: 1px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .final-cta-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 50% 60% at 50% 50%, rgba(30,100,220,.08) 0%, transparent 70%);
+    }
+    .final-cta-content { position: relative; z-index: 1; }
+    .final-cta h2 {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      line-height: .95; margin: .8rem 0 2rem;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .courses-grid { grid-template-columns: 1fr 1fr; }
+      .ladder-section { padding: 3rem 2rem; }
+    }
+    @media (max-width: 768px) {
+      .page-hero { padding: calc(var(--nav-h) + 2rem) 1.5rem 3rem; }
+      .courses-section { padding: 3rem 1.5rem; }
+      .courses-grid { grid-template-columns: 1fr; }
+      .faq-section { padding: 3rem 1.5rem; }
+      .final-cta { padding: 4rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-loader">
+  <div class="loader-logo">MO</div>
+  <div class="loader-bar"><div class="loader-progress"></div></div>
+</div>
+
+<div class="grain"></div>
+<div class="cursor"></div>
+<div class="cursor-ring"></div>
+
+<nav>
+  <a href="index.html" class="nav-logo">Mateus Oliveira</a>
+  <ul class="nav-links">
+    <li><a href="work.html">Trabalho</a></li>
+    <li><a href="services.html">Servicos</a></li>
+    <li><a href="products.html">Produtos</a></li>
+    <li><a href="courses.html" class="active">Cursos</a></li>
+    <li><a href="about.html">Sobre</a></li>
+    <li><a href="contact.html">Contacto</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="pt">PT</button>
+      <span class="lang-sep">/</span>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+    <a href="contact.html" class="nav-cta btn">Briefing</a>
+  </div>
+  <button class="nav-hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="nav-mobile">
+  <a href="work.html">Trabalho</a>
+  <a href="services.html">Servicos</a>
+  <a href="products.html">Produtos</a>
+  <a href="courses.html">Cursos</a>
+  <a href="about.html">Sobre</a>
+  <a href="contact.html">Contacto</a>
+</div>
+
+<!-- HERO -->
+<section class="page-hero">
+  <div class="page-hero-bg"></div>
+  <div class="page-hero-content">
+    <p class="section-eyebrow reveal">Formacao · AI Cinema</p>
+    <h1 class="reveal reveal-delay-1">Do zero<br>ao cinema.</h1>
+    <p class="page-hero-sub reveal reveal-delay-2">
+      Tres cursos em escada. Comecas sem saber nada de IA.
+      Terminas a criar conteudo cinematografico para marcas e clientes.
+    </p>
+  </div>
+</section>
+
+<!-- CURSOS -->
+<section class="courses-section">
+  <div class="container">
+    <p class="section-eyebrow reveal">Cursos</p>
+    <h2 class="section-title reveal reveal-delay-1">Escolhe o teu nivel</h2>
+    <p class="section-sub reveal reveal-delay-2">
+      Cada curso prepara-te para o seguinte. Podes entrar em qualquer nivel.
+    </p>
+  </div>
+
+  <div class="courses-grid reveal reveal-delay-2">
+
+    <!-- CURSO 1 — IA DO ZERO -->
+    <div class="course-card">
+      <div class="course-step">01</div>
+      <span class="course-badge badge-soon">Em breve</span>
+      <div class="course-name">IA do Zero</div>
+      <p class="course-promise">
+        Em 7 dias usas IA para criar textos, ideias, imagens e conteudo —
+        mesmo comecando do absoluto zero.
+      </p>
+      <p class="course-for">Para: <span>quem nunca abriu o ChatGPT</span></p>
+      <ul class="course-includes">
+        <li>7 modulos curtos (10-15 min cada)</li>
+        <li>Prompts prontos a usar no dia 1</li>
+        <li>Textos, ideias, imagens e conteudo</li>
+        <li>Exercicio pratico por dia</li>
+        <li>Acesso vitalicio</li>
+      </ul>
+      <div class="course-price">€27 <span class="price-note">lancamento</span></div>
+      <a href="#" class="course-btn course-btn-disabled">Notifica-me</a>
+    </div>
+
+    <!-- CURSO 2 — IA PARA CONTEUDO VISUAL -->
+    <div class="course-card featured">
+      <div class="course-step">02</div>
+      <span class="course-badge badge-soon">Em breve</span>
+      <div class="course-name">IA para Conteudo Visual</div>
+      <p class="course-promise">
+        Aprende a transformar ideias em videos cinematograficos com IA
+        para redes sociais, marcas e clientes.
+      </p>
+      <p class="course-for">Para: <span>quem ja entende o basico e quer criar conteudo forte</span></p>
+      <ul class="course-includes">
+        <li>Workflow completo de producao</li>
+        <li>Seedance 2.0 · Kling 3.0 · Higgsfield</li>
+        <li>Prompts, imagem, video e edicao</li>
+        <li>Como vender para clientes</li>
+        <li>Comunidade privada</li>
+        <li>Acesso vitalicio + actualizacoes</li>
+      </ul>
+      <div class="course-price">€197 <span class="price-note">lancamento</span></div>
+      <a href="#" class="course-btn course-btn-disabled">Notifica-me</a>
+    </div>
+
+    <!-- CURSO 3 — AI CINEMA PRO -->
+    <div class="course-card">
+      <div class="course-step">03</div>
+      <span class="course-badge badge-soon">Em breve</span>
+      <div class="course-name">AI Cinema Pro</div>
+      <p class="course-promise">
+        O metodo completo que gerou 5,7M de views.
+        Pipeline profissional de direcao criativa com IA — do conceito ao ficheiro final.
+      </p>
+      <p class="course-for">Para: <span>criadores que querem nivel de producao de estudio</span></p>
+      <ul class="course-includes">
+        <li>6+ horas de conteudo em video</li>
+        <li>Character sheets e reference systems</li>
+        <li>Producao de brand films e aberturas de show</li>
+        <li>Projecto final com feedback directo</li>
+        <li>Mentoria em grupo mensal</li>
+        <li>Acesso vitalicio + comunidade</li>
+      </ul>
+      <div class="course-price">€497 <span class="price-note">lancamento</span></div>
+      <a href="#" class="course-btn course-btn-disabled">Notifica-me</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ESCADA VISUAL -->
+<div class="ladder-section">
+  <div class="container">
+    <p class="section-eyebrow reveal">A Escada</p>
+    <h2 class="section-title reveal reveal-delay-1">Como funciona</h2>
+  </div>
+  <div class="ladder-steps reveal reveal-delay-2">
+    <div class="ladder-step">
+      <div class="ladder-step-n">01</div>
+      <div class="ladder-step-name">IA do Zero</div>
+      <div class="ladder-step-price">€27</div>
+      <div class="ladder-step-desc">Confianca e resultado rapido</div>
+    </div>
+    <div class="ladder-step">
+      <div class="ladder-step-n">02</div>
+      <div class="ladder-step-name">IA para Conteudo Visual</div>
+      <div class="ladder-step-price">€197</div>
+      <div class="ladder-step-desc">Primeiros clientes e portfolio</div>
+    </div>
+    <div class="ladder-step">
+      <div class="ladder-step-n">03</div>
+      <div class="ladder-step-name">AI Cinema Pro</div>
+      <div class="ladder-step-price">€497</div>
+      <div class="ladder-step-desc">Nivel de estudio profissional</div>
+    </div>
+    <div class="ladder-step">
+      <div class="ladder-step-n">∞</div>
+      <div class="ladder-step-name">Mentoria / Comunidade</div>
+      <div class="ladder-step-price">Em breve</div>
+      <div class="ladder-step-desc">Crescimento continuo</div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="container">
+    <p class="section-eyebrow reveal">FAQ</p>
+    <h2 class="section-title reveal reveal-delay-1">Perguntas frequentes</h2>
+  </div>
+  <div class="faq-list reveal reveal-delay-2">
+    <div class="faq-item">
+      <div class="faq-q">Preciso de experiencia previa com IA?</div>
+      <div class="faq-a">Nao. O curso IA do Zero foi desenhado especificamente para quem nunca usou IA. Comecas do absoluto zero e em 7 dias ja tens resultados reais.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Tenho de comprar os tres cursos?</div>
+      <div class="faq-a">Nao. Podes entrar directamente no nivel que faz sentido para ti. Se ja tens experiencia com IA, podes comecar no Curso 2 ou 3. A escada e uma sugestao, nao uma obrigacao.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Os cursos usam ferramentas pagas?</div>
+      <div class="faq-a">O Curso 1 usa apenas ferramentas gratuitas. Os Cursos 2 e 3 usam ferramentas como Seedance, Kling e Higgsfield — algumas tem versao gratuita, outras requerem subscricao. O investimento nas ferramentas e separado do curso.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Quando lancam?</div>
+      <div class="faq-a">Os tres cursos estao em producao. Para seres o primeiro a saber da data de lancamento e garantires o preco de lancamento, clica em Notifica-me em qualquer um dos cursos.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">O acesso e vitalicio?</div>
+      <div class="faq-a">Sim. Pagas uma vez e tens acesso para sempre, incluindo actualizacoes futuras do conteudo.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="final-cta-bg"></div>
+  <div class="final-cta-content">
+    <p class="section-eyebrow reveal">Nao percas o lancamento</p>
+    <h2 class="reveal reveal-delay-1">Entra na lista<br>de espera.</h2>
+    <p class="section-sub reveal reveal-delay-2" style="margin:0 auto 2.5rem;text-align:center;max-width:420px">
+      Preco de lancamento disponivel apenas para os primeiros inscritos.
+    </p>
+    <a href="https://tally.so/r/0QbJKA" target="_blank" class="btn btn-gold reveal reveal-delay-3">
+      Quero ser notificado
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo">MO</div>
+      <p class="footer-tagline">Producoes cinematograficas com IA. Lisboa, Portugal.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navegacao</h4>
+      <a href="work.html">Trabalho</a>
+      <a href="services.html">Servicos</a>
+      <a href="products.html">Produtos</a>
+      <a href="courses.html">Cursos</a>
+      <a href="about.html">Sobre</a>
+    </div>
+    <div class="footer-col">
+      <h4>Cursos</h4>
+      <a href="courses.html">IA do Zero</a>
+      <a href="courses.html">IA para Conteudo Visual</a>
+      <a href="courses.html">AI Cinema Pro</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contacto</h4>
+      <a href="https://instagram.com/mateusoliveira.ai" target="_blank">Instagram</a>
+      <a href="contact.html">Briefing</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">2026 Mateus Oliveira. Todos os direitos reservados.</p>
+    <div class="footer-social">
+      <a href="https://instagram.com/mateusoliveira.ai" target="_blank">Instagram</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// FAQ toggle
+document.querySelectorAll('.faq-item').forEach(item => {
+  item.querySelector('.faq-q').addEventListener('click', () => {
+    item.classList.toggle('open');
+  });
+});
+</script>
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
