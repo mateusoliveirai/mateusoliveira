@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RANDOM STORE</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #000;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+canvas {
+  position: fixed;
+  top: 0; left: 0;
+  display: block;
+}
+
+/* Cinematic vignette */
+.vignette {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.75) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Header ── */
+#header {
+  position: fixed;
+  top: 38px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+  pointer-events: none;
+  letter-spacing: 12px;
+  font-size: 9px;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  color: rgba(255,255,255,0.28);
+  text-transform: uppercase;
+}
+
+/* ── Country reveal ── */
+#reveal {
+  position: fixed;
+  bottom: 150px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+  pointer-events: none;
+  width: 92vw;
+  max-width: 860px;
+}
+
+#reveal-line {
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(210,165,70,0.7), transparent);
+  margin: 0 auto 18px;
+  transition: width 0.7s cubic-bezier(0.4,0,0.2,1) 0.25s;
+}
+
+#reveal-country {
+  font-size: clamp(30px, 7.5vw, 78px);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: #fff;
+  line-height: 1;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.85s cubic-bezier(0.2,0,0,1) 0.1s,
+              transform 0.85s cubic-bezier(0.2,0,0,1) 0.1s;
+  text-shadow:
+    0 0 80px rgba(210,165,70,0.35),
+    0 0 20px rgba(210,165,70,0.15),
+    0 2px 8px rgba(0,0,0,0.6);
+}
+
+#reveal-sub {
+  margin-top: 16px;
+  font-size: 9px;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: 9px;
+  color: rgba(210,165,70,0.55);
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.7s ease 0.55s;
+}
+
+#reveal.show #reveal-country { opacity: 1; transform: translateY(0); }
+#reveal.show #reveal-sub     { opacity: 1; }
+#reveal.show #reveal-line    { width: 120px; }
+
+/* ── Spin button ── */
+#btn {
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.55);
+  font-size: 9px;
+  letter-spacing: 7px;
+  text-transform: uppercase;
+  padding: 16px 48px;
+  cursor: pointer;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  transition: border-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
+  white-space: nowrap;
+}
+
+#btn:hover:not(:disabled) {
+  border-color: rgba(210,165,70,0.55);
+  color: rgba(210,165,70,0.95);
+  box-shadow: 0 0 28px rgba(210,165,70,0.1), inset 0 0 28px rgba(210,165,70,0.04);
+}
+
+#btn:disabled { opacity: 0.2; cursor: default; }
+
+/* ── Loading screen ── */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  transition: opacity 1.3s ease;
+}
+
+#loading.out { opacity: 0; pointer-events: none; }
+
+#loading-word {
+  font-size: 9px;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: 12px;
+  color: rgba(255,255,255,0.22);
+  text-transform: uppercase;
+}
+
+#loading-bar {
+  width: 90px;
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  position: relative;
+  overflow: hidden;
+}
+
+#loading-fill {
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  width: 0;
+  background: rgba(210,165,70,0.65);
+  transition: width 1.4s cubic-bezier(0.4,0,0.2,1);
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div id="loading-word">Initializing</div>
+  <div id="loading-bar"><div id="loading-fill"></div></div>
+</div>
+
+<div class="vignette"></div>
+
+<div id="header">Random Store</div>
+
+<div id="reveal">
+  <div id="reveal-line"></div>
+  <div id="reveal-country"></div>
+  <div id="reveal-sub">Next Destination</div>
+</div>
+
+<button id="btn">Spin the Globe</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ── Data ─────────────────────────────────────────────────────────────────────
+const COUNTRIES = [
+  { name: 'Japan',        lat:  36.20,  lon:  138.25 },
+  { name: 'Brazil',       lat: -14.24,  lon:  -51.93 },
+  { name: 'Turkey',       lat:  38.96,  lon:   35.24 },
+  { name: 'Nigeria',      lat:   9.08,  lon:    8.68 },
+  { name: 'Argentina',    lat: -38.42,  lon:  -63.62 },
+  { name: 'South Korea',  lat:  35.91,  lon:  127.77 },
+  { name: 'Morocco',      lat:  31.79,  lon:   -7.09 },
+  { name: 'Indonesia',    lat:  -0.79,  lon:  113.92 },
+  { name: 'Colombia',     lat:   4.57,  lon:  -74.30 },
+  { name: 'Egypt',        lat:  26.82,  lon:   30.80 },
+  { name: 'Thailand',     lat:  15.87,  lon:  100.99 },
+  { name: 'Mexico',       lat:  23.63,  lon: -102.55 },
+  { name: 'Portugal',     lat:  39.40,  lon:   -8.22 },
+  { name: 'India',        lat:  20.59,  lon:   78.96 },
+  { name: 'Ghana',        lat:   7.95,  lon:   -1.02 },
+  { name: 'Vietnam',      lat:  14.06,  lon:  108.28 },
+  { name: 'Peru',         lat:  -9.19,  lon:  -75.02 },
+  { name: 'Kenya',        lat:  -0.02,  lon:   37.91 },
+  { name: 'Spain',        lat:  40.46,  lon:   -3.75 },
+  { name: 'Philippines',  lat:  12.88,  lon:  121.77 },
+  { name: 'Chile',        lat: -35.68,  lon:  -71.54 },
+  { name: 'Greece',       lat:  39.07,  lon:   21.82 },
+  { name: 'Malaysia',     lat:   4.21,  lon:  101.98 },
+  { name: 'Ethiopia',     lat:   9.15,  lon:   40.49 },
+  { name: 'Saudi Arabia', lat:  23.89,  lon:   45.08 },
+  { name: 'New Zealand',  lat: -40.90,  lon:  174.89 },
+  { name: 'Cuba',         lat:  21.52,  lon:  -79.99 },
+  { name: 'Sweden',       lat:  60.13,  lon:   18.64 },
+  { name: 'Pakistan',     lat:  30.38,  lon:   69.35 },
+  { name: 'Ukraine',      lat:  48.38,  lon:   31.17 },
+  { name: 'France',       lat:  46.23,  lon:    2.21 },
+  { name: 'Italy',        lat:  41.87,  lon:   12.57 },
+  { name: 'Germany',      lat:  51.17,  lon:   10.45 },
+  { name: 'South Africa', lat: -30.56,  lon:   22.94 },
+  { name: 'Nepal',        lat:  28.17,  lon:   84.12 },
+  { name: 'Iceland',      lat:  64.96,  lon:  -19.02 },
+  { name: 'Israel',       lat:  31.05,  lon:   34.85 },
+  { name: 'Iran',         lat:  32.43,  lon:   53.69 },
+  { name: 'Canada',       lat:  56.13,  lon: -106.35 },
+  { name: 'Australia',    lat: -25.27,  lon:  133.78 },
+];
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function latLonToVec3(lat, lon, r) {
+  const phi   = (90 - lat) * Math.PI / 180;
+  const theta = (lon + 180) * Math.PI / 180;
+  return new THREE.Vector3(
+    -r * Math.sin(phi) * Math.cos(theta),
+     r * Math.cos(phi),
+     r * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+const norm2pi = a => ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+const easeOutQuint = t => 1 - Math.pow(1 - t, 5);
+
+// ── Renderer ──────────────────────────────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000);
+document.body.appendChild(renderer.domElement);
+
+// ── Scene / Camera ────────────────────────────────────────────────────────────
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 0.25, 3.2);
+camera.lookAt(0, 0, 0);
+
+// ── Stars ─────────────────────────────────────────────────────────────────────
+(function buildStarField() {
+  const N   = 12000;
+  const pos = new Float32Array(N * 3);
+  const col = new Float32Array(N * 3);
+
+  for (let i = 0; i < N; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi   = Math.acos(2 * Math.random() - 1);
+    const r     = 80 + Math.random() * 140;
+
+    pos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+    pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+    pos[i * 3 + 2] = r * Math.cos(phi);
+
+    const bright = 0.3 + Math.random() * 0.7;
+    const warm   = Math.random() > 0.88 ? 0.85 + Math.random() * 0.15 : 1.0;
+    const cool   = Math.random() > 0.92 ? 0.6  + Math.random() * 0.4  : 1.0;
+    col[i * 3]     = bright * warm;
+    col[i * 3 + 1] = bright;
+    col[i * 3 + 2] = bright * cool;
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.13,
+    vertexColors: true,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.88,
+  })));
+})();
+
+// ── Globe group ───────────────────────────────────────────────────────────────
+const globe = new THREE.Group();
+globe.rotation.x = 0.18;
+scene.add(globe);
+
+const R = 1.0;
+const loader = new THREE.TextureLoader();
+
+// ── Earth sphere ──────────────────────────────────────────────────────────────
+const earthMat = new THREE.MeshPhongMaterial({
+  color: 0x223355,
+  shininess: 22,
+  specular: new THREE.Color(0x334466),
+});
+
+const earthMesh = new THREE.Mesh(new THREE.SphereGeometry(R, 80, 80), earthMat);
+globe.add(earthMesh);
+
+// ── Atmosphere layers ─────────────────────────────────────────────────────────
+globe.add(new THREE.Mesh(
+  new THREE.SphereGeometry(R * 1.055, 64, 64),
+  new THREE.MeshPhongMaterial({
+    color: 0x1155cc,
+    transparent: true,
+    opacity: 0.18,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+));
+
+globe.add(new THREE.Mesh(
+  new THREE.SphereGeometry(R * 1.2, 64, 64),
+  new THREE.MeshBasicMaterial({
+    color: 0x0a2266,
+    transparent: true,
+    opacity: 0.09,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+));
+
+globe.add(new THREE.Mesh(
+  new THREE.SphereGeometry(R * 1.45, 32, 32),
+  new THREE.MeshBasicMaterial({
+    color: 0x081133,
+    transparent: true,
+    opacity: 0.05,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+));
+
+// ── Lighting ──────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x1a2030, 1.5));
+
+const sunLight = new THREE.DirectionalLight(0xffeedd, 1.8);
+sunLight.position.set(5, 3, 5);
+scene.add(sunLight);
+
+const rimLight = new THREE.DirectionalLight(0x2244bb, 0.55);
+rimLight.position.set(-5, -1, -4);
+scene.add(rimLight);
+
+// ── Country dots ──────────────────────────────────────────────────────────────
+const DOT_GEO = new THREE.SphereGeometry(0.014, 8, 8);
+
+const countryObjs = COUNTRIES.map(c => {
+  const pos = latLonToVec3(c.lat, c.lon, R + 0.007);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.6,
+  });
+  const mesh = new THREE.Mesh(DOT_GEO, mat);
+  mesh.position.copy(pos);
+  globe.add(mesh);
+  return { c, mesh, mat, localPos: pos.clone() };
+});
+
+// ── Selection ring ────────────────────────────────────────────────────────────
+const ringMat = new THREE.MeshBasicMaterial({
+  color: 0xffbb44,
+  transparent: true,
+  opacity: 0,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+const ring = new THREE.Mesh(new THREE.TorusGeometry(0.052, 0.008, 8, 56), ringMat);
+ring.visible = false;
+globe.add(ring);
+
+const ring2Mat = new THREE.MeshBasicMaterial({
+  color: 0xdd9922,
+  transparent: true,
+  opacity: 0,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+const ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.004, 8, 56), ring2Mat);
+ring2.visible = false;
+globe.add(ring2);
+
+// ── Texture loading ───────────────────────────────────────────────────────────
+const EARTH_TEX = 'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg';
+const SPEC_TEX  = 'https://threejs.org/examples/textures/planets/earth_specular_2048.jpg';
+
+let loaded = 0;
+const onLoad = () => {
+  loaded++;
+  document.getElementById('loading-fill').style.width = (loaded * 50) + '%';
+  if (loaded >= 1) {
+    setTimeout(() => {
+      document.getElementById('loading').classList.add('out');
+      setTimeout(() => document.getElementById('loading').remove(), 1400);
+    }, 500);
+  }
+};
+
+loader.load(EARTH_TEX, tex => {
+  earthMat.map   = tex;
+  earthMat.color.setHex(0xffffff);
+  earthMat.needsUpdate = true;
+  onLoad();
+}, undefined, () => { onLoad(); });
+
+loader.load(SPEC_TEX, tex => {
+  earthMat.specularMap = tex;
+  earthMat.shininess   = 35;
+  earthMat.needsUpdate = true;
+}, undefined, () => {});
+
+setTimeout(() => { document.getElementById('loading-fill').style.width = '35%'; }, 120);
+
+// ── Animation state ───────────────────────────────────────────────────────────
+let spinning   = false;
+let spinT0     = 0;
+let spinDur    = 3700;
+let rotY0      = 0;
+let rotYEnd    = 0;
+let pulse      = 0;
+let winner     = null;
+let lastWinner = null;
+
+const AUTO_SPEED = 0.0007;
+
+// ── Spin logic ────────────────────────────────────────────────────────────────
+function startSpin() {
+  if (spinning) return;
+
+  resetDots();
+  document.getElementById('reveal').classList.remove('show');
+  document.getElementById('btn').disabled = true;
+  ring.visible  = false;
+  ring2.visible = false;
+  ringMat.opacity  = 0;
+  ring2Mat.opacity = 0;
+
+  let idx;
+  do { idx = Math.floor(Math.random() * COUNTRIES.length); }
+  while (countryObjs[idx] === lastWinner && COUNTRIES.length > 1);
+  winner = countryObjs[idx];
+  lastWinner = winner;
+
+  const rawTarget = winner.c.lon * Math.PI / 180 + Math.PI / 2;
+  const nStart    = norm2pi(globe.rotation.y);
+  const nTarget   = norm2pi(rawTarget);
+  let   delta     = nTarget - nStart;
+  if (delta < 0) delta += Math.PI * 2;
+
+  const extraSpins = (3 + Math.floor(Math.random() * 3)) * Math.PI * 2;
+  rotY0   = globe.rotation.y;
+  rotYEnd = globe.rotation.y + delta + extraSpins;
+
+  spinning = true;
+  spinT0   = performance.now();
+}
+
+function resetDots() {
+  countryObjs.forEach(o => {
+    o.mat.color.setHex(0xffffff);
+    o.mat.opacity = 0.6;
+    o.mesh.scale.setScalar(1);
+  });
+}
+
+function revealWinner() {
+  winner.mat.color.setHex(0xffcc55);
+  winner.mat.opacity = 1;
+  winner.mesh.scale.setScalar(2.4);
+
+  const pos = winner.localPos;
+  const q   = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0, 0, 1),
+    pos.clone().normalize()
+  );
+  [ring, ring2].forEach(r => { r.position.copy(pos); r.quaternion.copy(q); r.visible = true; r.scale.setScalar(1); });
+  ringMat.opacity  = 0;
+  ring2Mat.opacity = 0;
+  pulse = 0;
+
+  document.getElementById('reveal-country').textContent = winner.c.name.toUpperCase();
+  setTimeout(() => {
+    document.getElementById('reveal').classList.add('show');
+    document.getElementById('btn').disabled   = false;
+    document.getElementById('btn').textContent = 'Spin Again';
+  }, 320);
+}
+
+// ── Render loop ───────────────────────────────────────────────────────────────
+function tick() {
+  requestAnimationFrame(tick);
+
+  if (spinning) {
+    const t = Math.min((performance.now() - spinT0) / spinDur, 1);
+    globe.rotation.y = rotY0 + (rotYEnd - rotY0) * easeOutQuint(t);
+    if (t >= 1) { spinning = false; revealWinner(); }
+  } else {
+    globe.rotation.y += AUTO_SPEED;
+  }
+
+  if (ring.visible) {
+    pulse += 0.045;
+    const p1 = 0.5 + 0.5 * Math.sin(pulse);
+    const p2 = 0.5 + 0.5 * Math.sin(pulse * 0.65 + 1);
+    ringMat.opacity  = 0.38 + 0.52 * p1;
+    ring2Mat.opacity = 0.2  + 0.35 * p2;
+    ring.scale.setScalar(1 + 0.09 * p1);
+    ring2.scale.setScalar(1 + 0.06 * p2);
+    if (winner) winner.mesh.scale.setScalar(1.8 + 0.7 * p1);
+  }
+
+  renderer.render(scene, camera);
+}
+tick();
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+document.getElementById('btn').addEventListener('click', startSpin);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
