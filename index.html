@@ -242,7 +242,7 @@ function latLonToVec3(lat, lon, r) {
   );
 }
 
-const norm2pi    = a => ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+const norm2pi     = a => ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 const easeOutQuint = t => 1 - Math.pow(1 - t, 5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -336,16 +336,15 @@ loader.load('https://threejs.org/examples/textures/planets/earth_specular_2048.j
 }, undefined, () => {});
 setTimeout(() => { document.getElementById('loading-fill').style.width = '35%'; }, 120);
 
-// ── State ─────────────────────────────────────────────────────────────────────
 let spinning   = false;
 let spinT0     = 0;
-const spinDur  = 2500;   // ms — total spin animation
+const spinDur  = 2500;
 let rotY0      = 0;
 let rotYEnd    = 0;
 let pulse      = 0;
 let winner     = null;
 let lastWinner = null;
-let autoRotate = true;   // pauses once a country is revealed
+let autoRotate = true;
 
 const AUTO_SPEED = 0.0007;
 
@@ -364,9 +363,10 @@ function startSpin() {
   winner = countryObjs[idx];
   lastWinner = winner;
 
-  // Target Y so the country's longitude faces the camera (+Z)
-  // Proof: lon=-90 starts at +Z; each +90° of lon needs +PI/2 of rotation.y
-  const rawTarget  = winner.c.lon * Math.PI / 180 + Math.PI / 2;
+  // Three.js Ry matrix: z' = -x·sin(r) + z·cos(r).
+  // lon=0 sits at +X; to reach +Z (camera) requires r = -PI/2.
+  // General formula: rawTarget = -lon·PI/180 - PI/2
+  const rawTarget  = -winner.c.lon * Math.PI / 180 - Math.PI / 2;
   const nStart     = norm2pi(globe.rotation.y);
   const nTarget    = norm2pi(rawTarget);
   let   delta      = nTarget - nStart;
@@ -402,7 +402,7 @@ function revealWinner() {
   });
   ringMat.opacity = 0; ring2Mat.opacity = 0; pulse = 0;
 
-  autoRotate = false;  // globe freezes so country stays front-and-centre
+  autoRotate = false;
 
   document.getElementById('reveal-country').textContent = winner.c.name.toUpperCase();
   setTimeout(() => {
