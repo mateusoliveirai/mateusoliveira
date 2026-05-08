@@ -20,7 +20,6 @@ canvas {
   display: block;
 }
 
-/* Cinematic vignette */
 .vignette {
   position: fixed;
   inset: 0;
@@ -29,7 +28,6 @@ canvas {
   z-index: 2;
 }
 
-/* ── Header ── */
 #header {
   position: fixed;
   top: 38px;
@@ -46,7 +44,6 @@ canvas {
   text-transform: uppercase;
 }
 
-/* ── Country reveal ── */
 #reveal {
   position: fixed;
   bottom: 150px;
@@ -100,7 +97,6 @@ canvas {
 #reveal.show #reveal-sub     { opacity: 1; }
 #reveal.show #reveal-line    { width: 120px; }
 
-/* ── Spin button ── */
 #btn {
   position: fixed;
   bottom: 50px;
@@ -129,7 +125,6 @@ canvas {
 
 #btn:disabled { opacity: 0.2; cursor: default; }
 
-/* ── Loading screen ── */
 #loading {
   position: fixed;
   inset: 0;
@@ -180,7 +175,6 @@ canvas {
 </div>
 
 <div class="vignette"></div>
-
 <div id="header">Random Store</div>
 
 <div id="reveal">
@@ -248,7 +242,7 @@ function latLonToVec3(lat, lon, r) {
   );
 }
 
-const norm2pi = a => ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+const norm2pi    = a => ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 const easeOutQuint = t => 1 - Math.pow(1 - t, 5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -263,22 +257,22 @@ camera.position.set(0, 0.25, 3.2);
 camera.lookAt(0, 0, 0);
 
 (function buildStarField() {
-  const N   = 12000;
+  const N = 12000;
   const pos = new Float32Array(N * 3);
   const col = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) {
-    const theta = Math.random() * Math.PI * 2;
-    const phi   = Math.acos(2 * Math.random() - 1);
-    const r     = 80 + Math.random() * 140;
-    pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-    pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-    pos[i*3+2] = r * Math.cos(phi);
-    const bright = 0.3 + Math.random() * 0.7;
-    const warm   = Math.random() > 0.88 ? 0.85 + Math.random() * 0.15 : 1.0;
-    const cool   = Math.random() > 0.92 ? 0.6  + Math.random() * 0.4  : 1.0;
-    col[i*3]   = bright * warm;
-    col[i*3+1] = bright;
-    col[i*3+2] = bright * cool;
+    const t = Math.random() * Math.PI * 2;
+    const p = Math.acos(2 * Math.random() - 1);
+    const r = 80 + Math.random() * 140;
+    pos[i*3]   = r * Math.sin(p) * Math.cos(t);
+    pos[i*3+1] = r * Math.sin(p) * Math.sin(t);
+    pos[i*3+2] = r * Math.cos(p);
+    const b  = 0.3 + Math.random() * 0.7;
+    const wm = Math.random() > 0.88 ? 0.85 + Math.random() * 0.15 : 1.0;
+    const cm = Math.random() > 0.92 ? 0.6  + Math.random() * 0.4  : 1.0;
+    col[i*3]   = b * wm;
+    col[i*3+1] = b;
+    col[i*3+2] = b * cm;
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -292,19 +286,19 @@ const globe = new THREE.Group();
 globe.rotation.x = 0.18;
 scene.add(globe);
 
-const R = 1.0;
+const R      = 1.0;
 const loader = new THREE.TextureLoader();
 
 const earthMat = new THREE.MeshPhongMaterial({ color: 0x223355, shininess: 22, specular: new THREE.Color(0x334466) });
 globe.add(new THREE.Mesh(new THREE.SphereGeometry(R, 80, 80), earthMat));
 
 globe.add(new THREE.Mesh(new THREE.SphereGeometry(R*1.055,64,64), new THREE.MeshPhongMaterial({ color:0x1155cc, transparent:true, opacity:0.18, side:THREE.BackSide, blending:THREE.AdditiveBlending, depthWrite:false })));
-globe.add(new THREE.Mesh(new THREE.SphereGeometry(R*1.2,64,64),   new THREE.MeshBasicMaterial({ color:0x0a2266, transparent:true, opacity:0.09, side:THREE.BackSide, blending:THREE.AdditiveBlending, depthWrite:false })));
-globe.add(new THREE.Mesh(new THREE.SphereGeometry(R*1.45,32,32),  new THREE.MeshBasicMaterial({ color:0x081133, transparent:true, opacity:0.05, side:THREE.BackSide, blending:THREE.AdditiveBlending, depthWrite:false })));
+globe.add(new THREE.Mesh(new THREE.SphereGeometry(R*1.2,  64,64), new THREE.MeshBasicMaterial({ color:0x0a2266, transparent:true, opacity:0.09, side:THREE.BackSide, blending:THREE.AdditiveBlending, depthWrite:false })));
+globe.add(new THREE.Mesh(new THREE.SphereGeometry(R*1.45, 32,32), new THREE.MeshBasicMaterial({ color:0x081133, transparent:true, opacity:0.05, side:THREE.BackSide, blending:THREE.AdditiveBlending, depthWrite:false })));
 
 scene.add(new THREE.AmbientLight(0x1a2030, 1.5));
-const sunLight = new THREE.DirectionalLight(0xffeedd, 1.8); sunLight.position.set(5,3,5); scene.add(sunLight);
-const rimLight = new THREE.DirectionalLight(0x2244bb, 0.55); rimLight.position.set(-5,-1,-4); scene.add(rimLight);
+const sun = new THREE.DirectionalLight(0xffeedd, 1.8); sun.position.set(5,3,5);   scene.add(sun);
+const rim = new THREE.DirectionalLight(0x2244bb, 0.55); rim.position.set(-5,-1,-4); scene.add(rim);
 
 const DOT_GEO = new THREE.SphereGeometry(0.014, 8, 8);
 const countryObjs = COUNTRIES.map(c => {
@@ -324,10 +318,10 @@ const ring2Mat = new THREE.MeshBasicMaterial({ color:0xdd9922, transparent:true,
 const ring2    = new THREE.Mesh(new THREE.TorusGeometry(0.08,0.004,8,56), ring2Mat);
 ring2.visible  = false; globe.add(ring2);
 
-let loaded = 0;
-const onLoad = () => {
-  loaded++;
-  if (loaded >= 1) {
+let texLoaded = 0;
+const onTexLoad = () => {
+  texLoaded++;
+  if (texLoaded >= 1) {
     setTimeout(() => {
       document.getElementById('loading').classList.add('out');
       setTimeout(() => document.getElementById('loading').remove(), 1400);
@@ -335,14 +329,24 @@ const onLoad = () => {
   }
 };
 loader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', tex => {
-  earthMat.map = tex; earthMat.color.setHex(0xffffff); earthMat.needsUpdate = true; onLoad();
-}, undefined, () => { onLoad(); });
+  earthMat.map = tex; earthMat.color.setHex(0xffffff); earthMat.needsUpdate = true; onTexLoad();
+}, undefined, () => { onTexLoad(); });
 loader.load('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg', tex => {
   earthMat.specularMap = tex; earthMat.shininess = 35; earthMat.needsUpdate = true;
 }, undefined, () => {});
 setTimeout(() => { document.getElementById('loading-fill').style.width = '35%'; }, 120);
 
-let spinning=false, spinT0=0, spinDur=3700, rotY0=0, rotYEnd=0, pulse=0, winner=null, lastWinner=null;
+// ── State ─────────────────────────────────────────────────────────────────────
+let spinning   = false;
+let spinT0     = 0;
+const spinDur  = 2500;   // ms — total spin animation
+let rotY0      = 0;
+let rotYEnd    = 0;
+let pulse      = 0;
+let winner     = null;
+let lastWinner = null;
+let autoRotate = true;   // pauses once a country is revealed
+
 const AUTO_SPEED = 0.0007;
 
 function startSpin() {
@@ -350,59 +354,86 @@ function startSpin() {
   resetDots();
   document.getElementById('reveal').classList.remove('show');
   document.getElementById('btn').disabled = true;
-  ring.visible=false; ring2.visible=false; ringMat.opacity=0; ring2Mat.opacity=0;
+  ring.visible = false; ring2.visible = false;
+  ringMat.opacity = 0; ring2Mat.opacity = 0;
+  autoRotate = true;
+
   let idx;
   do { idx = Math.floor(Math.random() * COUNTRIES.length); }
   while (countryObjs[idx] === lastWinner && COUNTRIES.length > 1);
-  winner = countryObjs[idx]; lastWinner = winner;
-  const rawTarget = winner.c.lon * Math.PI / 180 + Math.PI / 2;
-  const nStart = norm2pi(globe.rotation.y);
-  const nTarget = norm2pi(rawTarget);
-  let delta = nTarget - nStart;
+  winner = countryObjs[idx];
+  lastWinner = winner;
+
+  // Target Y so the country's longitude faces the camera (+Z)
+  // Proof: lon=-90 starts at +Z; each +90° of lon needs +PI/2 of rotation.y
+  const rawTarget  = winner.c.lon * Math.PI / 180 + Math.PI / 2;
+  const nStart     = norm2pi(globe.rotation.y);
+  const nTarget    = norm2pi(rawTarget);
+  let   delta      = nTarget - nStart;
   if (delta < 0) delta += Math.PI * 2;
-  const extraSpins = (3 + Math.floor(Math.random() * 3)) * Math.PI * 2;
-  rotY0 = globe.rotation.y;
+
+  const extraSpins = (2 + Math.floor(Math.random() * 2)) * Math.PI * 2;
+  rotY0   = globe.rotation.y;
   rotYEnd = globe.rotation.y + delta + extraSpins;
-  spinning = true; spinT0 = performance.now();
+
+  spinning = true;
+  spinT0   = performance.now();
 }
 
 function resetDots() {
-  countryObjs.forEach(o => { o.mat.color.setHex(0xffffff); o.mat.opacity=0.6; o.mesh.scale.setScalar(1); });
+  countryObjs.forEach(o => {
+    o.mat.color.setHex(0xffffff);
+    o.mat.opacity = 0.6;
+    o.mesh.scale.setScalar(1);
+  });
 }
 
 function revealWinner() {
-  winner.mat.color.setHex(0xffcc55); winner.mat.opacity=1; winner.mesh.scale.setScalar(2.4);
+  winner.mat.color.setHex(0xffcc55);
+  winner.mat.opacity = 1;
+  winner.mesh.scale.setScalar(2.4);
+
   const pos = winner.localPos;
-  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1), pos.clone().normalize());
-  [ring,ring2].forEach(r => { r.position.copy(pos); r.quaternion.copy(q); r.visible=true; r.scale.setScalar(1); });
-  ringMat.opacity=0; ring2Mat.opacity=0; pulse=0;
+  const q   = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0, 0, 1), pos.clone().normalize()
+  );
+  [ring, ring2].forEach(r => {
+    r.position.copy(pos); r.quaternion.copy(q); r.visible = true; r.scale.setScalar(1);
+  });
+  ringMat.opacity = 0; ring2Mat.opacity = 0; pulse = 0;
+
+  autoRotate = false;  // globe freezes so country stays front-and-centre
+
   document.getElementById('reveal-country').textContent = winner.c.name.toUpperCase();
   setTimeout(() => {
     document.getElementById('reveal').classList.add('show');
-    document.getElementById('btn').disabled=false;
-    document.getElementById('btn').textContent='Spin Again';
-  }, 320);
+    document.getElementById('btn').disabled    = false;
+    document.getElementById('btn').textContent = 'Spin Again';
+  }, 250);
 }
 
 function tick() {
   requestAnimationFrame(tick);
+
   if (spinning) {
-    const t = Math.min((performance.now()-spinT0)/spinDur, 1);
-    globe.rotation.y = rotY0 + (rotYEnd-rotY0) * easeOutQuint(t);
-    if (t >= 1) { spinning=false; revealWinner(); }
-  } else {
+    const t = Math.min((performance.now() - spinT0) / spinDur, 1);
+    globe.rotation.y = rotY0 + (rotYEnd - rotY0) * easeOutQuint(t);
+    if (t >= 1) { spinning = false; revealWinner(); }
+  } else if (autoRotate) {
     globe.rotation.y += AUTO_SPEED;
   }
+
   if (ring.visible) {
     pulse += 0.045;
-    const p1 = 0.5+0.5*Math.sin(pulse);
-    const p2 = 0.5+0.5*Math.sin(pulse*0.65+1);
-    ringMat.opacity  = 0.38+0.52*p1;
-    ring2Mat.opacity = 0.2+0.35*p2;
-    ring.scale.setScalar(1+0.09*p1);
-    ring2.scale.setScalar(1+0.06*p2);
-    if (winner) winner.mesh.scale.setScalar(1.8+0.7*p1);
+    const p1 = 0.5 + 0.5 * Math.sin(pulse);
+    const p2 = 0.5 + 0.5 * Math.sin(pulse * 0.65 + 1);
+    ringMat.opacity  = 0.38 + 0.52 * p1;
+    ring2Mat.opacity = 0.2  + 0.35 * p2;
+    ring.scale.setScalar(1 + 0.09 * p1);
+    ring2.scale.setScalar(1 + 0.06 * p2);
+    if (winner) winner.mesh.scale.setScalar(1.8 + 0.7 * p1);
   }
+
   renderer.render(scene, camera);
 }
 tick();
